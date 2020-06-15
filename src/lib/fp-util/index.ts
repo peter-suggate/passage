@@ -6,7 +6,7 @@ import {
   map as mapTask,
   mapLeft as mapTaskLeft,
   chain as chainTask,
-  right as taskRight,
+  right as taskRight
 } from "fp-ts/lib/TaskEither";
 
 export const tap = <E, A>(onOk: (a: A) => void) => (arg: A) =>
@@ -21,18 +21,18 @@ export const tapTask = <E, A>(onOk: (a: A) => void, onErr?: (e: E) => void) => (
 ) =>
   pipe(
     te,
-    mapTaskLeft((err) => {
+    mapTaskLeft(err => {
       onErr && onErr(err); // Run an optional error effect.
       return err;
     }),
-    chainTask((arg) => {
+    chainTask(arg => {
       onOk(arg); // Run the side effect.
       return te; // Forward the original value.
     })
   );
 
 export const taskFromAsync = <T>(asyncFn: () => Promise<T>) =>
-  tryCatch<Error, T>(asyncFn, (e) => e as Error);
+  tryCatch<Error, T>(asyncFn, e => e as Error);
 
 // export const mapTaskFromAsyncWith = <T, U>(
 //   asyncFn: (input: unknown) => Promise<T>,

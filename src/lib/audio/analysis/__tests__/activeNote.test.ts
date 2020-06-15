@@ -4,7 +4,7 @@ import { of } from "rxjs";
 import { AudioOnsetEvent, AudioPitchEvent } from "../../audio-types";
 import { activeNote$ } from "../activeNote";
 
-function pitchEvent(frequency: number = 440): AudioPitchEvent {
+function pitchEvent(frequency = 440): AudioPitchEvent {
   return {
     type: "pitch",
     pitch: {

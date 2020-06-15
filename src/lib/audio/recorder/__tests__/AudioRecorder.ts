@@ -14,7 +14,7 @@ describe("getting state of current audio recorder", () => {
       audioRecorderStatus(
         some({
           type: "starting",
-          message: "Connecting to media",
+          message: "Connecting to media"
         })
       )
     ).toBe("starting");
@@ -22,7 +22,7 @@ describe("getting state of current audio recorder", () => {
     expect(
       audioRecorderStatus(
         some({
-          type: "stopping",
+          type: "stopping"
         })
       )
     ).toBe("stopping");
@@ -32,7 +32,7 @@ describe("getting state of current audio recorder", () => {
         some({
           context: emptyImpl<AudioContext>(),
           analyzer$: emptyImpl<Observable<AudioRecorderEventTypes>>(),
-          type: "running",
+          type: "running"
         })
       )
     ).toBe("running");
@@ -42,7 +42,7 @@ describe("getting state of current audio recorder", () => {
         some({
           context: emptyImpl<AudioContext>(),
           analyzer$: emptyImpl<Observable<AudioRecorderEventTypes>>(),
-          type: "stopped",
+          type: "stopped"
         })
       )
     ).toBe("stopped");

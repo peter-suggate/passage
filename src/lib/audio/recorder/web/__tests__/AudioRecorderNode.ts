@@ -8,8 +8,8 @@ import { AudioRecorderEventTypes } from "../../recorder-types";
 
 function pitch(
   t = 0,
-  is_onset: boolean = false,
-  frequency: number = 440,
+  is_onset = false,
+  frequency = 440,
   clarity = 0.95
 ): Pitch {
   return {
