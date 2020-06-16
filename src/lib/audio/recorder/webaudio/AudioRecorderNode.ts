@@ -1,13 +1,11 @@
 import { Subject } from "rxjs";
-import { TaskEither } from "fp-ts/lib/TaskEither";
-import { taskFromAsync } from "../../../fp-util";
 import {
   AudioRecorderEventTypes,
   AudioProcessorEventTypes,
 } from "../recorder-types";
 
 function scriptUrl(scriptPath: string) {
-  const publicUrl = "http://localhost:8080/public";
+  const publicUrl = "http://localhost:8080";
 
   return `${publicUrl}/${scriptPath}`;
 }
@@ -38,18 +36,28 @@ export class AudioAnalyzerNode extends Subject<AudioRecorderEventTypes> {
     };
   }
 
-  static create(context: AudioContext): TaskEither<Error, AudioAnalyzerNode> {
+  static async create(context: AudioContext) {
     // Fetch the Wasm module as raw bytes and pass to the worklet.
-    return taskFromAsync(async () => {
-      await context.suspend();
+    await context.suspend();
 
-      // Add our audio processor worklet to the context.
+    // Add our audio processor worklet to the context.
+    try {
       await context.audioWorklet.addModule(AudioAnalyzerNode.processorUrl);
+    } catch (e) {
+      throw new Error(
+        `Failed to load audio analyzer worklet at url: ${AudioAnalyzerNode.processorUrl}. Further info: ${e.message}`
+      );
+    }
 
+    try {
       const wasmBytes = await AudioAnalyzerNode.fetchMusicAnalyzerWasm();
 
       return new AudioAnalyzerNode(context, wasmBytes);
-    });
+    } catch (e) {
+      throw new Error(
+        `Failed to load audio analyzer WASM module. Further info: ${e.message}`
+      );
+    }
   }
 
   static get processorUrl(): string {

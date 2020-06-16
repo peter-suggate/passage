@@ -6,20 +6,24 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
+    "test:watch": "vue-cli-service test:unit --watch",
     "test:e2e": "vue-cli-service test:e2e",
     "lint": "vue-cli-service lint",
     "install-assets": "xcopy /E /Y /I .\\node_modules\\music-analyzer-wasm-rs\\* .\\public\\music-analyzer-wasm-rs",
     "update-deps": "yarn upgrade music-analyzer-wasm-rs"
   },
   "dependencies": {
+    "@vue/composition-api": "^0.6.3",
     "core-js": "^3.6.5",
     "fp-ts": "^2.6.5",
     "music-analyzer-wasm-rs": "file:../music-analyzer-wasm-rs/pkg",
     "register-service-worker": "^1.7.1",
+    "rxjs": "^6.5.5",
     "vue": "^2.6.11",
     "vue-router": "^3.2.0",
     "vue-rx": "^6.2.0",
-    "vuetify": "^2.3.0"
+    "vuetify": "^2.3.0",
+    "xstate": "^4.10.0"
   },
   "devDependencies": {
     "@types/jest": "^24.0.19",
@@ -36,6 +40,7 @@
     "@vue/eslint-config-prettier": "^6.0.0",
     "@vue/eslint-config-typescript": "^5.0.2",
     "@vue/test-utils": "^1.0.3",
+    "@xstate/test": "^0.4.0",
     "deepmerge": "^4.2.2",
     "eslint": "^6.7.2",
     "eslint-config-prettier": "^6.11.0",
@@ -48,6 +53,7 @@
     "typescript": "~3.9.3",
     "vue-cli-plugin-vuetify": "~2.0.5",
     "vue-template-compiler": "^2.6.11",
-    "vuetify-loader": "^1.3.0"
+    "vuetify-loader": "^1.3.0",
+    "worklet-loader": "^1.0.0"
   }
 }
