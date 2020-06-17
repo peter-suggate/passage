@@ -4,10 +4,14 @@ import { AudioOnsetEvent, AudioPitchEvent } from "../audio-types";
 /**
  * Events that come out of the audio worklet processor.
  */
-export type AudioProcessorEventTypes = {
-  type: "pitches";
-  result: Pitch[];
-};
+export type AudioProcessorEventTypes =
+  | {
+      type: "initialized";
+    }
+  | {
+      type: "pitches";
+      result: Pitch[];
+    };
 
 export type AudioRecorderEventTypes = AudioOnsetEvent | AudioPitchEvent;
 

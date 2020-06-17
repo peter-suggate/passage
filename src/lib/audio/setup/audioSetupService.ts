@@ -1,4 +1,4 @@
-import { createMachine, interpret, assign } from "xstate";
+import { createMachine, interpret, assign, DoneInvokeEvent } from "xstate";
 import { fromEventPattern } from "rxjs";
 import { shareReplay } from "rxjs/operators";
 import {
@@ -37,7 +37,7 @@ export type AudioSetupState = { context: Context } & (
 export const audioSetupMachine = createMachine<Context, Event, AudioSetupState>(
   {
     id: "WebAudioSetup",
-    initial: "uninitialized",
+    initial: "detectingAudio",
     context: {
       media: undefined,
       context: undefined,
@@ -52,18 +52,24 @@ export const audioSetupMachine = createMachine<Context, Event, AudioSetupState>(
       detectingAudio: {
         invoke: {
           id: "detectWebAudio",
-          src: () => getWebAudioMediaStream(),
+          src: async () => {
+            const media = await getWebAudioMediaStream();
+            return {
+              media,
+              context: new globalThis.AudioContext(),
+            };
+          },
           onDone: {
             target: "createAudioAnalyzer",
-            actions: assign<Context, any>({
-              media: (_, e) => e.data,
-              context: new globalThis.AudioContext(),
+            actions: assign<Context, DoneInvokeEvent<Context>>({
+              media: (_, e) => e.data.media,
+              context: (_, e) => e.data.context,
               message: undefined,
             }),
           },
           onError: {
             target: "noAudioFound",
-            actions: assign<Context, any>({
+            actions: assign<Context, DoneInvokeEvent<string>>({
               media: undefined,
               context: undefined,
               message: (_, e) => e.data,
@@ -80,13 +86,16 @@ export const audioSetupMachine = createMachine<Context, Event, AudioSetupState>(
       createAudioAnalyzer: {
         invoke: {
           id: "createAudioAnalyzer",
-          src: (context) =>
-            AudioAnalyzerNode.create(context.context!).then((node) =>
-              connectAnalyzer(context.context!, node, context.media!)
-            ),
+          src: async (context) => {
+            const node = await AudioAnalyzerNode.create(context.context!);
+
+            connectAnalyzer(context.context!, node, context.media!);
+
+            return node;
+          },
           onDone: {
             target: "resume",
-            actions: assign<Context, any>({
+            actions: assign<Context, DoneInvokeEvent<AudioAnalyzerNode>>({
               media: (context) => context.media,
               context: (context) => context.context,
               node: (_, e) => e.data,
@@ -94,7 +103,7 @@ export const audioSetupMachine = createMachine<Context, Event, AudioSetupState>(
           },
           onError: {
             target: "analyzerError",
-            actions: assign<Context, any>({
+            actions: assign<Context, DoneInvokeEvent<string>>({
               media: (context) => context.media,
               context: (context) => context.context,
               node: undefined,
@@ -111,8 +120,11 @@ export const audioSetupMachine = createMachine<Context, Event, AudioSetupState>(
       },
 
       analyzerRunning: {
-        on: {
-          SUSPEND: "suspend",
+        type: "final",
+        data: (context) => {
+          return {
+            context: context.context,
+          };
         },
       },
 
@@ -132,21 +144,21 @@ export const audioSetupMachine = createMachine<Context, Event, AudioSetupState>(
         },
       },
 
-      suspend: {
-        invoke: {
-          id: "suspend",
-          src: (context) => suspendAudio(context.context!),
-          onDone: {
-            target: "analyzerSuspended",
-          },
-          onError: {
-            target: "analyzerError",
-            actions: assign<Context, any>({
-              message: (_, e) => e.data,
-            }),
-          },
-        },
-      },
+      // suspend: {
+      //   invoke: {
+      //     id: "suspend",
+      //     src: (context) => suspendAudio(context.context!),
+      //     onDone: {
+      //       target: "analyzerSuspended",
+      //     },
+      //     onError: {
+      //       target: "analyzerError",
+      //       actions: assign<Context, any>({
+      //         message: (_, e) => e.data,
+      //       }),
+      //     },
+      //   },
+      // },
 
       analyzerError: {
         on: { DETECT: "createAudioAnalyzer" },
@@ -156,14 +168,18 @@ export const audioSetupMachine = createMachine<Context, Event, AudioSetupState>(
 );
 
 // Machine instance with internal state
-export const audioSetupService = () =>
+export const makeAudioSetupService = () =>
   interpret(audioSetupMachine)
-    // .onTransition((state) => console.log(state.value, state.context))
+    .onTransition((state) => console.log(state.value, state.context))
     .start();
+
+export type AudioSetupService = ReturnType<typeof makeAudioSetupService>;
 
 // State machine services don't give you states, but an observable of [state, event],
 // if you want to have the state only use fromEventPattern.
-export const audioSetup$ = (service: ReturnType<typeof audioSetupService>) =>
+export const audioSetup$ = (
+  service: ReturnType<typeof makeAudioSetupService>
+) =>
   fromEventPattern<AudioSetupState>(
     (handler) => {
       service

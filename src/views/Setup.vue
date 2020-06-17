@@ -10,7 +10,7 @@ import SetupAudio from "@/components/SetupAudio.vue";
 export default {
   name: "Home",
   components: {
-    SetupAudio,
-  },
+    SetupAudio
+  }
 };
 </script>

@@ -22,6 +22,10 @@ class AudioProcessor extends AudioWorkletProcessor {
         "McLeod",
         1024
       );
+
+      this.port.postMessage({
+        type: "initialized",
+      });
     });
   }
 

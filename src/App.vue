@@ -2,18 +2,12 @@
   <v-app>
     <v-app-bar app color="primary" dark>
       <div class="d-flex align-center">
-        <h1 class="display-1 font-weight-light mb-3">
-          Passage
-        </h1>
+        <h1 class="display-1 font-weight-light mb-3">Passage</h1>
       </div>
 
       <v-spacer></v-spacer>
 
-      <v-btn
-        href="https://github.com/vuetifyjs/vuetify/releases/latest"
-        target="_blank"
-        text
-      >
+      <v-btn href="https://github.com/vuetifyjs/vuetify/releases/latest" target="_blank" text>
         <span class="mr-2">Latest Release</span>
         <v-icon>mdi-open-in-new</v-icon>
       </v-btn>
@@ -27,17 +21,23 @@
 
 <script lang="ts">
 import Vue from "vue";
-// import HelloWorld from "./components/HelloWorld.vue";
+import { redirectOnAudioServiceStateChange$, redirect } from "./router";
 
 export default Vue.extend({
   name: "App",
 
-  components: {
-    // HelloWorld,
-  },
+  components: {},
 
   data: () => ({
     //
   }),
+
+  subscriptions: function(this) {
+    return { $: redirectOnAudioServiceStateChange$(this) };
+  },
+
+  beforeRouteEnter(to, from, next) {
+    redirect(next);
+  }
 });
 </script>

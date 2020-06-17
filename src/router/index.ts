@@ -2,6 +2,7 @@ import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import Home from "../views/Home.vue";
 import { Routes } from "./Routes";
+export * from "./redirects";
 
 Vue.use(VueRouter);
 
@@ -39,3 +40,5 @@ const router = new VueRouter({
 });
 
 export default router;
+
+export { Routes };

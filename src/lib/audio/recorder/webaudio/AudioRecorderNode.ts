@@ -37,7 +37,6 @@ export class AudioAnalyzerNode extends Subject<AudioRecorderEventTypes> {
   }
 
   static async create(context: AudioContext) {
-    // Fetch the Wasm module as raw bytes and pass to the worklet.
     await context.suspend();
 
     // Add our audio processor worklet to the context.
@@ -73,6 +72,9 @@ export class AudioAnalyzerNode extends Subject<AudioRecorderEventTypes> {
 
   onmessage(eventData: AudioProcessorEventTypes) {
     switch (eventData.type) {
+      case "initialized": {
+        break;
+      }
       case "pitches": {
         eventData.result.forEach((pitch) => {
           if (pitch.is_onset) {

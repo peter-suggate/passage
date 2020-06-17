@@ -1,6 +1,6 @@
 import { createModel } from "@xstate/test";
 import {
-  audioSetupService,
+  makeAudioSetupService,
   audioSetupMachine,
   audioSetup$,
   AudioSetupState,
@@ -26,7 +26,7 @@ it("enters appropriate error state when no audio device is found", (done) => {
     new Error("no mic available")
   );
 
-  const service = audioSetupService();
+  const service = makeAudioSetupService();
 
   expectServiceEvents$<AudioSetupState>(
     audioSetup$(service),
@@ -46,7 +46,7 @@ it("is awesom", (done) => {
     new MediaStream()
   );
 
-  const service = audioSetupService();
+  const service = makeAudioSetupService();
 
   expectServiceEvents$<AudioSetupState>(
     audioSetup$(service),
