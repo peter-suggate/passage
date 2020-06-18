@@ -21,6 +21,10 @@ export function redirectOnAudioServiceStateChange$(vue: Vue) {
           vue.$router.push({ path: Routes.Listen });
           break;
         }
+        case "suspended": {
+          vue.$router.push({ path: Routes.Home });
+          break;
+        }
       }
     })
   );

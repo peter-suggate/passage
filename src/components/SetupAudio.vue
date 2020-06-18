@@ -46,7 +46,7 @@ export default Vue.extend({
       status: audio$.pipe(
         map(e => {
           if (e.value === "inSetup") {
-            const setupService = audioService.children.get("setup");
+            const setupService = audioService.children.get("audio-setup");
 
             if (setupService) {
               const setupState = setupService.state;

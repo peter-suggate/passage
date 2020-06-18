@@ -7,16 +7,17 @@ import {
 } from "xstate";
 import { fromEventPattern } from "rxjs";
 import { shareReplay } from "rxjs/operators";
+import { audioSetupMachine, AudioSetupContext } from "./setup";
 import {
-  AudioSetupService,
-  audioSetupMachine,
-  makeAudioSetupService,
-} from "./setup";
-import { activeNoteMachine } from "./analysis/activeNoteService";
+  activeNoteMachine,
+  ActiveNoteContext,
+} from "./analysis/activeNoteService";
 import { resumeAudio, suspendAudio } from "./setup/audioSetupEffects";
+import { AudioAnalyzerNode } from "./recorder/webaudio/AudioRecorderNode";
 
 type Context = {
   context?: AudioContext;
+  node?: AudioAnalyzerNode;
   message?: string;
 };
 
@@ -27,6 +28,8 @@ export type AudioState = { context: Context } & (
   | { value: "inSetup" }
   | { value: "running" }
   | { value: "resume" }
+  | { value: "error" }
+  | { value: "suspended" }
 );
 
 export const audioMachine = createMachine<Context, Event, AudioState>(
@@ -43,41 +46,48 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
         },
       },
 
+      // Perform audio setup using the audioSetup child service.
       inSetup: {
         invoke: {
           id: "audio-setup",
           src: "audioSetup",
           onDone: {
             target: "running",
-            actions: assign<Context, DoneInvokeEvent<AudioContext>>({
-              context: (_, e) => {
-                console.log(e);
-                return e.data;
-              },
-            }),
+            actions: assign<Context, DoneInvokeEvent<AudioSetupContext>>(
+              (_, e) => ({
+                context: e.data.context,
+                node: e.data.node,
+              })
+            ),
           },
         },
       },
 
+      // Once audio recording is running,
       running: {
         invoke: {
           id: "running",
-          src: activeNoteMachine,
+          src: "analyzer",
+          data: (ctx: Context) =>
+            ({
+              analyzerEvents$: ctx.node,
+              note: undefined,
+              // (context, event) => context.setup
+            } as ActiveNoteContext),
         },
         on: {
-          STOP: "suspend",
+          STOP: "suspending",
         },
       },
 
-      resume: {
+      resuming: {
         invoke: {
-          id: "resume",
-          src: (context) => resumeAudio(context.context!),
+          src: "resume",
           onDone: {
-            target: "analyzerRunning",
+            target: "running",
           },
           onError: {
-            target: "analyzerError",
+            target: "error",
             actions: assign<Context, any>({
               message: (_, e) => e.data,
             }),
@@ -85,15 +95,14 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
         },
       },
 
-      suspend: {
+      suspending: {
         invoke: {
-          id: "suspend",
-          src: (context) => suspendAudio(context.context!),
+          src: "suspend",
           onDone: {
-            target: "analyzerSuspended",
+            target: "suspended",
           },
           onError: {
-            target: "analyzerError",
+            target: "error",
             actions: assign<Context, any>({
               message: (_, e) => e.data,
             }),
@@ -101,27 +110,21 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
         },
       },
 
-      // suspended: {
-      //   invoke: {
-      //     // id: "audio-setup",
-      //     // src: "audioSetup",
-      //     src: async (context: Context) => {
-      //       context.setup && context.setup.
-      //       // context.setup!.send("SUSPEND");
-      //       // return context;
-      //     },
-      //     onDone: {
-      //       target: "uninitialized",
-      //     },
-      //   },
-      //   // entry: send("SUSPEND", { to: "audio-setup" }),
-      //   on: { START: "running" },
-      // },
+      error: {
+        // on: {},
+      },
+
+      suspended: {
+        on: { START: "resuming" },
+      },
     },
   },
   {
     services: {
       audioSetup: (context, event) => audioSetupMachine,
+      resume: (context) => resumeAudio(context.context!),
+      suspend: (context) => suspendAudio(context.context!),
+      analyzer: (context) => activeNoteMachine,
     },
   }
 );

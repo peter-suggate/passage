@@ -3,7 +3,7 @@
     <v-row class="text-center">
       <v-col cols="12">
         <v-row justify="center">
-          <h1 class="display-3">{{ note }}</h1>
+          <h1 class="display-3">{{ status.message }}</h1>
         </v-row>
       </v-col>
     </v-row>
@@ -12,7 +12,9 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { activeNote$ } from "@/lib/audio/analysis";
+import { map } from "rxjs/operators";
+import { audio$, audioService } from "@/lib/audio";
+import { ActiveNoteState } from "../lib/audio/analysis/activeNoteService";
 
 export default Vue.extend({
   name: "NoteViz",
@@ -27,28 +29,38 @@ export default Vue.extend({
     // service.send("DETECT");
 
     return {
-      // note: activeNote$()
-      // status: audioSetup$(service).pipe(
-      //   tap((e) => {
-      //     if (e.value === "resume") {
-      //       this.$router.push({ path: Routes.Listen });
-      //     }
-      //   }),
-      //   map((e) => {
-      //     console.log(e.value);
-      //     switch (e.value) {
-      //       case "detectingAudio":
-      //         return { title: "Initializing", status: "Detecting microphone" };
-      //       case "createAudioAnalyzer":
-      //         return { title: "Initializing", message: "Loading analyzers" };
-      //       case "noAudioFound":
-      //         return { title: "No microphone found" };
-      //       default:
-      //         return { title: e.value, message: e.context.message };
-      //     }
-      //   })
-      // ),
+      status: audio$.pipe(
+        map(e => {
+          if (e.value === "running") {
+            const service = audioService.children.get("running");
+
+            if (service) {
+              const state = service.state as ActiveNoteState;
+
+              switch (state.value) {
+                case "uninitialized":
+                case "waiting":
+                  return {
+                    message: "Can't hear a tune"
+                  };
+                case "noteActive":
+                  return {
+                    message: state.context.note
+                  };
+              }
+            }
+          }
+
+          return {
+            title: "Error",
+            message: "Shouldn't ever get here"
+          };
+          // console.log(e.value);
+          // switch (e.value) {
+          // }
+        })
+      )
     };
-  },
+  }
 });
 </script>

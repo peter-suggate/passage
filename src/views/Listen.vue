@@ -5,6 +5,7 @@
         <v-col class="mb-4">
           <br />
           <v-btn v-on:click="finished">Finished</v-btn>
+          <NoteViz />
         </v-col>
       </v-row>
     </v-container>
@@ -16,12 +17,12 @@
 import Vue from "vue";
 import { audioService } from "../lib/audio";
 import { redirect } from "../router";
-// import HelloWorld from "@/components/HelloWorld.vue";
+import NoteViz from "@/components/NoteViz.vue";
 
 export default Vue.extend({
   name: "Home",
   components: {
-    // HelloWorld
+    NoteViz
   },
   methods: {
     finished: function() {

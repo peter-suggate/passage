@@ -54,7 +54,7 @@ it("is awesom", (done) => {
       { value: "uninitialized" },
       { value: "detectingAudio" },
       { value: "createAudioAnalyzer" },
-      { value: "resume" },
+      { value: "analyzerSuspended" },
     ],
     done
   );

@@ -1,51 +1,81 @@
-import { createMachine, interpret, assign } from "xstate";
+import { createMachine, interpret, assign, DoneInvokeEvent } from "xstate";
 import { fromEventPattern } from "rxjs";
-import { shareReplay } from "rxjs/operators";
+import { shareReplay, map } from "rxjs/operators";
 import { AudioAnalyzerNode } from "../recorder/webaudio/AudioRecorderNode";
 import { AudioOnsetEvent, AudioPitchEvent } from "../audio-types";
-import { Note } from "./activeNote";
+import { frequencyToNote, Note } from "./activeNote";
+import { Pitch } from "music-analyzer-wasm-rs";
 
-type Context = {
-  note: Note;
+export type ActiveNoteContext = {
+  analyzerEvents$?: AudioAnalyzerNode;
+  note?: Note;
 };
 
 type Event =
-  | { type: "PITCH_ADDED"; pitch: AudioPitchEvent }
-  | { type: "ONSET_ADDED"; onset: AudioOnsetEvent };
+  | { type: "PITCH_ADDED"; pitch: Pitch }
+  | { type: "ONSET_ADDED"; t: number };
 
-export type ActiveNoteState = { context: Context } & (
-  | { value: "none" }
+export type ActiveNoteState = { context: ActiveNoteContext } & (
+  | { value: "uninitialized" }
+  | { value: "waiting" }
   | { value: "noteActive" }
+  | { value: "finished" }
 );
 
-export const activeNoteMachine = createMachine<Context, Event, ActiveNoteState>(
-  {
-    id: "ActiveNote",
-    initial: "none",
-    context: {} as Context,
-    states: {
-      none: {
-        on: {
-          PITCH_ADDED: "noteActive",
-          // ONSET_ADDED: ""
+export const activeNoteMachine = createMachine<
+  ActiveNoteContext,
+  Event,
+  ActiveNoteState
+>({
+  id: "ActiveNote",
+  initial: "uninitialized",
+  context: {} as ActiveNoteContext,
+  states: {
+    uninitialized: {
+      invoke: {
+        src: (context) =>
+          context.analyzerEvents$!.pipe(
+            map((e) =>
+              e.type === "pitch"
+                ? { type: "PITCH_ADDED", pitch: e.pitch }
+                : { type: "ONSET_ADDED", t: e.t }
+            )
+          ),
+        // interval(context.myInterval).pipe(
+        //   map(value => ({ type: 'COUNT', value })),
+        //   take(5)
+        // ),
+        onDone: {
+          target: "finished",
+          actions: assign<ActiveNoteContext, DoneInvokeEvent<Pitch>>({
+            note: (context, event) => frequencyToNote(event.data.frequency),
+          }),
         },
       },
+    },
 
-      noteActive: {
-        // actions: assign({
-        //   posts: (context, event) => event.data
-        // }),
-        on: { PITCH_ADDED: "noteActive" },
+    waiting: {
+      on: {
+        PITCH_ADDED: "noteActive",
+        // ONSET_ADDED: ""
       },
     },
-  }
-);
 
-// Machine instance with internal state
-export const activeNoteService = () =>
-  interpret(activeNoteMachine)
-    // .onTransition((state) => console.log(state.value, state.context))
-    .start();
+    noteActive: {
+      on: { PITCH_ADDED: "noteActive" },
+    },
+
+    finished: {
+      type: "final",
+    },
+  },
+});
+
+// // Machine instance with internal state
+// export const activeNoteService = () =>
+//   interpret(activeNoteMachine)
+//     // .onTransition((state) => console.log(state.value, state.context))
+//     .start();
 
 // // State machine services don't give you states, but an observable of [state, event],
 // // if you want to have the state only use fromEventPattern.
