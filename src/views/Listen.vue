@@ -21,14 +21,17 @@ import NoteViz from "@/components/NoteViz.vue";
 
 export default Vue.extend({
   name: "Home",
+
   components: {
     NoteViz
   },
+
   methods: {
     finished: function() {
       audioService.send("STOP");
     }
   },
+
   beforeRouteEnter(to, from, next) {
     redirect(next);
   }

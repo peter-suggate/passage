@@ -1,6 +1,7 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import Home from "../views/Home.vue";
+import Listen from "../views/Listen.vue";
 import { Routes } from "./Routes";
 export * from "./redirects";
 
@@ -29,7 +30,8 @@ const routes: Array<RouteConfig> = [
   {
     path: Routes.Listen,
     name: "Listen",
-    component: () => import("../views/Listen.vue"),
+    component: Listen,
+    // component: () => import("../views/Listen.vue"),
   },
 ];
 

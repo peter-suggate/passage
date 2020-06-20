@@ -13,11 +13,11 @@ import {
   ActiveNoteContext,
 } from "./analysis/activeNoteService";
 import { resumeAudio, suspendAudio } from "./setup/audioSetupEffects";
-import { AudioAnalyzerNode } from "./recorder/webaudio/AudioRecorderNode";
+import { AudioRecorderNode } from "./recorder/webaudio/AudioRecorderNode";
 
 type Context = {
-  context?: AudioContext;
-  node?: AudioAnalyzerNode;
+  audio?: AudioContext;
+  analyzer$?: AudioRecorderNode;
   message?: string;
 };
 
@@ -27,7 +27,7 @@ export type AudioState = { context: Context } & (
   | { value: "uninitialized" }
   | { value: "inSetup" }
   | { value: "running" }
-  | { value: "resume" }
+  | { value: "resuming" }
   | { value: "error" }
   | { value: "suspended" }
 );
@@ -37,8 +37,10 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
     id: "Audio",
     initial: "uninitialized",
     context: {
-      setup: undefined,
-    } as Context,
+      audio: undefined,
+      analyzer$: undefined,
+      message: undefined,
+    },
     states: {
       uninitialized: {
         on: {
@@ -52,31 +54,14 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
           id: "audio-setup",
           src: "audioSetup",
           onDone: {
-            target: "running",
+            target: "resuming",
             actions: assign<Context, DoneInvokeEvent<AudioSetupContext>>(
               (_, e) => ({
-                context: e.data.context,
-                node: e.data.node,
+                audio: e.data.audio,
+                analyzer$: e.data.node,
               })
             ),
           },
-        },
-      },
-
-      // Once audio recording is running,
-      running: {
-        invoke: {
-          id: "running",
-          src: "analyzer",
-          data: (ctx: Context) =>
-            ({
-              analyzerEvents$: ctx.node,
-              note: undefined,
-              // (context, event) => context.setup
-            } as ActiveNoteContext),
-        },
-        on: {
-          STOP: "suspending",
         },
       },
 
@@ -92,6 +77,23 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
               message: (_, e) => e.data,
             }),
           },
+        },
+      },
+
+      // Once audio recording is running,
+      running: {
+        invoke: {
+          id: "running",
+          src: "analyzer",
+          data: (ctx: Context) =>
+            ({
+              analyzerEvents$: ctx.analyzer$,
+              note: undefined,
+              // (context, event) => context.setup
+            } as ActiveNoteContext),
+        },
+        on: {
+          STOP: "suspending",
         },
       },
 
@@ -122,8 +124,8 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
   {
     services: {
       audioSetup: (context, event) => audioSetupMachine,
-      resume: (context) => resumeAudio(context.context!),
-      suspend: (context) => suspendAudio(context.context!),
+      resume: (context) => resumeAudio(context.audio!),
+      suspend: (context) => suspendAudio(context.audio!),
       analyzer: (context) => activeNoteMachine,
     },
   }

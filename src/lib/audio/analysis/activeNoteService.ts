@@ -1,93 +1,72 @@
 import { createMachine, interpret, assign, DoneInvokeEvent } from "xstate";
-import { fromEventPattern } from "rxjs";
-import { shareReplay, map } from "rxjs/operators";
-import { AudioAnalyzerNode } from "../recorder/webaudio/AudioRecorderNode";
-import { AudioOnsetEvent, AudioPitchEvent } from "../audio-types";
+import { Observable } from "rxjs";
+import { map, filter } from "rxjs/operators";
+import { AudioRecorderNode } from "../recorder/webaudio/AudioRecorderNode";
+import { AudioPitchEvent } from "../audio-types";
 import { frequencyToNote, Note } from "./activeNote";
 import { Pitch } from "music-analyzer-wasm-rs";
+import { cast } from "@/lib/testing/partial-impl";
 
 export type ActiveNoteContext = {
-  analyzerEvents$?: AudioAnalyzerNode;
-  note?: Note;
+  analyzerEvents$?: AudioRecorderNode;
+  note$?: Observable<Note>;
 };
 
 type Event =
   | { type: "PITCH_ADDED"; pitch: Pitch }
   | { type: "ONSET_ADDED"; t: number };
 
-export type ActiveNoteState = { context: ActiveNoteContext } & (
-  | { value: "uninitialized" }
-  | { value: "waiting" }
-  | { value: "noteActive" }
-  | { value: "finished" }
-);
+export type ActiveNoteState = {
+  context: ActiveNoteContext;
+} & ({ value: "running" } | { value: "noteActive" } | { value: "finished" });
 
 export const activeNoteMachine = createMachine<
   ActiveNoteContext,
   Event,
   ActiveNoteState
->({
-  id: "ActiveNote",
-  initial: "uninitialized",
-  context: {} as ActiveNoteContext,
-  states: {
-    uninitialized: {
-      invoke: {
-        src: (context) =>
-          context.analyzerEvents$!.pipe(
-            map((e) =>
-              e.type === "pitch"
-                ? { type: "PITCH_ADDED", pitch: e.pitch }
-                : { type: "ONSET_ADDED", t: e.t }
-            )
-          ),
-        // interval(context.myInterval).pipe(
-        //   map(value => ({ type: 'COUNT', value })),
-        //   take(5)
-        // ),
-        onDone: {
-          target: "finished",
-          actions: assign<ActiveNoteContext, DoneInvokeEvent<Pitch>>({
-            note: (context, event) => frequencyToNote(event.data.frequency),
-          }),
+>(
+  {
+    id: "ActiveNote",
+    initial: "running",
+    context: {
+      note: undefined,
+    } as ActiveNoteContext,
+    states: {
+      running: {
+        entry: assign<ActiveNoteContext, Event>({
+          note$: (context) =>
+            context.analyzerEvents$?.pipe(
+              filter((e) => e.type === "pitch"),
+              map((e) =>
+                frequencyToNote(cast<AudioPitchEvent>(e).pitch.frequency)
+              )
+            ),
+        }),
+
+        invoke: {
+          src: "listen",
+          onDone: {
+            target: "finished",
+          },
         },
       },
-    },
 
-    waiting: {
-      on: {
-        PITCH_ADDED: "noteActive",
-        // ONSET_ADDED: ""
+      finished: {
+        type: "final",
       },
     },
-
-    noteActive: {
-      on: { PITCH_ADDED: "noteActive" },
-    },
-
-    finished: {
-      type: "final",
-    },
   },
-});
-
-// // Machine instance with internal state
-// export const activeNoteService = () =>
-//   interpret(activeNoteMachine)
-//     // .onTransition((state) => console.log(state.value, state.context))
-//     .start();
-
-// // State machine services don't give you states, but an observable of [state, event],
-// // if you want to have the state only use fromEventPattern.
-// export const audioSetup$ = (service: ReturnType<typeof activeNoteService>) =>
-//   fromEventPattern<ActiveNoteState>(
-//     (handler) => {
-//       service
-//         // Listen for state transitions
-//         .onTransition((state, _) => handler(state))
-//         // Start the service
-//         .start();
-//       return service;
-//     },
-//     (_, service) => service.stop()
-//   ).pipe(shareReplay(1));
+  {
+    services: {
+      listen: (context) =>
+        context.analyzerEvents$!.pipe(
+          filter((e) => e.type === "pitch"),
+          map((e) =>
+            e.type === "pitch"
+              ? { type: "PITCH_ADDED", pitch: e.pitch }
+              : { type: "ONSET_ADDED", t: e.t }
+          )
+        ),
+    },
+  }
+);

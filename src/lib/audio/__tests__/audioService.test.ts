@@ -1,18 +1,54 @@
 import { makeAudioService, audioMachine } from "../audioService";
+import { interpret } from "xstate";
+import TestAudioContext from "../test-fixtures/AudioContext";
 
-it("", () => {
-  const machine = audioMachine.withConfig({
+function testMachine(optionsIn?: {
+  // audioSetup: (context, event) => audioSetupMachine,
+  // resume: (context) => resumeAudio(context.context!),
+  // suspend: (context) => suspendAudio(context.context!),
+  // analyzer: (context) => activeNoteMachine,
+}) {
+  // const options = {
+  //   ...optionsIn,
+  //   audioSetup
+  // };
+
+  return audioMachine.withConfig({
     services: {
       audioSetup: (context, event) => async () => ({
-        context: new AudioContext(),
+        audio: new TestAudioContext(),
       }),
-      resume: (context) => resumeAudio(context.context!),
-      suspend: (context) => suspendAudio(context.context!),
-      analyzer: (context) => activeNoteMachine,
+      resume: (context) => async () => {},
+      suspend: (context) => async () => {},
+      analyzer: (context) => async () => {},
     },
   });
+}
 
-  const { initialState } = machine;
+it("enters setup when started", () => {
+  const machine = testMachine();
 
-  expect(machine.transition(initialState, "START").value).toBe("inSetup");
+  expect(machine.transition(machine.initialState, "START").value).toBe(
+    "inSetup"
+  );
+});
+
+it("should go to resuming state when audio setup succeeds", async (done) => {
+  const audio = new TestAudioContext();
+  const audioSetup = async () => audio;
+
+  const machine = testMachine({
+    audioSetup,
+  });
+
+  interpret(machine)
+    .onTransition((state) => {
+      if (state.matches("resuming")) {
+        expect(state.context.audio).toEqual(audio);
+
+        done();
+      }
+    })
+    .start()
+    .send("START");
 });

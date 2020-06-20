@@ -31,15 +31,15 @@ export default Vue.extend({
   },
 
   data: () => ({
-    Routes,
-    current: audioService.initialState
+    Routes
+    // current: audioService.initialState
   }),
 
-  created() {
-    audioService.onTransition(state => {
-      this.current = state;
-    });
-  },
+  // created() {
+  //   audioService.onTransition(state => {
+  //     this.current = state;
+  //   });
+  // },
 
   subscriptions: function(this) {
     return {

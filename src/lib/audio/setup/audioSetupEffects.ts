@@ -1,4 +1,4 @@
-import { AudioAnalyzerNode } from "../recorder/webaudio/AudioRecorderNode";
+import { AudioRecorderNode } from "../recorder/webaudio/AudioRecorderNode";
 
 export const getWebAudioMediaStream = async () =>
   globalThis.navigator.mediaDevices.getUserMedia({
@@ -8,7 +8,7 @@ export const getWebAudioMediaStream = async () =>
 
 export const connectAnalyzer = (
   context: AudioContext,
-  node: AudioAnalyzerNode,
+  node: AudioRecorderNode,
   mediaStream: MediaStream
 ) => {
   const audioSource = context.createMediaStreamSource(mediaStream);

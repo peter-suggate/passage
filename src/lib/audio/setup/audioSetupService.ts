@@ -2,12 +2,12 @@ import { createMachine, interpret, assign, DoneInvokeEvent } from "xstate";
 import { fromEventPattern } from "rxjs";
 import { shareReplay } from "rxjs/operators";
 import { getWebAudioMediaStream, connectAnalyzer } from "./audioSetupEffects";
-import { AudioAnalyzerNode } from "../recorder/webaudio/AudioRecorderNode";
+import { AudioRecorderNode } from "../recorder/webaudio/AudioRecorderNode";
 
 export type AudioSetupContext = {
   media?: MediaStream;
-  context?: AudioContext;
-  node?: AudioAnalyzerNode;
+  audio?: AudioContext;
+  node?: AudioRecorderNode;
   message?: string;
 };
 
@@ -36,7 +36,7 @@ export const audioSetupMachine = createMachine<
   initial: "detectingAudio",
   context: {
     media: undefined,
-    context: undefined,
+    audio: undefined,
   } as AudioSetupContext,
   states: {
     uninitialized: {
@@ -52,7 +52,7 @@ export const audioSetupMachine = createMachine<
           const media = await getWebAudioMediaStream();
           return {
             media,
-            context: new globalThis.AudioContext(),
+            audio: new globalThis.AudioContext(),
           };
         },
         onDone: {
@@ -62,7 +62,7 @@ export const audioSetupMachine = createMachine<
             DoneInvokeEvent<AudioSetupContext>
           >({
             media: (_, e) => e.data.media,
-            context: (_, e) => e.data.context,
+            audio: (_, e) => e.data.audio,
             message: undefined,
           }),
         },
@@ -70,7 +70,7 @@ export const audioSetupMachine = createMachine<
           target: "noAudioFound",
           actions: assign<AudioSetupContext, DoneInvokeEvent<string>>({
             media: undefined,
-            context: undefined,
+            audio: undefined,
             message: (_, e) => e.data,
           }),
         },
@@ -85,9 +85,9 @@ export const audioSetupMachine = createMachine<
     createAudioAnalyzer: {
       invoke: {
         src: async (context) => {
-          const node = await AudioAnalyzerNode.create(context.context!);
+          const node = await AudioRecorderNode.create(context.audio!);
 
-          connectAnalyzer(context.context!, node, context.media!);
+          connectAnalyzer(context.audio!, node, context.media!);
 
           return node;
         },
@@ -95,10 +95,10 @@ export const audioSetupMachine = createMachine<
           target: "analyzerSuspended",
           actions: assign<
             AudioSetupContext,
-            DoneInvokeEvent<AudioAnalyzerNode>
+            DoneInvokeEvent<AudioRecorderNode>
           >({
             media: (context) => context.media,
-            context: (context) => context.context,
+            audio: (context) => context.audio,
             node: (_, e) => e.data,
           }),
         },
@@ -106,7 +106,7 @@ export const audioSetupMachine = createMachine<
           target: "analyzerError",
           actions: assign<AudioSetupContext, DoneInvokeEvent<string>>({
             media: (context) => context.media,
-            context: (context) => context.context,
+            audio: (context) => context.audio,
             node: undefined,
             message: (_, e) => e.data,
           }),
@@ -118,7 +118,7 @@ export const audioSetupMachine = createMachine<
       type: "final",
       data: (context) => {
         return {
-          context: context.context,
+          audio: context.audio,
           node: context.node,
         };
       },

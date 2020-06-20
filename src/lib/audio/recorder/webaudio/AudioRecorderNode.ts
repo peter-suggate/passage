@@ -10,7 +10,7 @@ function scriptUrl(scriptPath: string) {
   return `${publicUrl}/${scriptPath}`;
 }
 
-export class AudioAnalyzerNode extends Subject<AudioRecorderEventTypes> {
+export class AudioRecorderNode extends Subject<AudioRecorderEventTypes> {
   audioWorkletNode: AudioWorkletNode;
 
   private constructor(context: AudioContext, wasmBytes: ArrayBuffer) {
@@ -41,17 +41,17 @@ export class AudioAnalyzerNode extends Subject<AudioRecorderEventTypes> {
 
     // Add our audio processor worklet to the context.
     try {
-      await context.audioWorklet.addModule(AudioAnalyzerNode.processorUrl);
+      await context.audioWorklet.addModule(AudioRecorderNode.processorUrl);
     } catch (e) {
       throw new Error(
-        `Failed to load audio analyzer worklet at url: ${AudioAnalyzerNode.processorUrl}. Further info: ${e.message}`
+        `Failed to load audio analyzer worklet at url: ${AudioRecorderNode.processorUrl}. Further info: ${e.message}`
       );
     }
 
     try {
-      const wasmBytes = await AudioAnalyzerNode.fetchMusicAnalyzerWasm();
+      const wasmBytes = await AudioRecorderNode.fetchMusicAnalyzerWasm();
 
-      return new AudioAnalyzerNode(context, wasmBytes);
+      return new AudioRecorderNode(context, wasmBytes);
     } catch (e) {
       throw new Error(
         `Failed to load audio analyzer WASM module. Further info: ${e.message}`
@@ -90,12 +90,6 @@ export class AudioAnalyzerNode extends Subject<AudioRecorderEventTypes> {
           });
         });
 
-        // console.log(
-        //   `latest pitches (Hz) amount: ${eventData.result.length}, first: `,
-        //   eventData.result.map(
-        //     (e) => `is_onset: ${e.is_onset}, frequency: ${e.frequency}`
-        //   )
-        // );
         break;
       }
       default:
