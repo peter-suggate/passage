@@ -2,7 +2,11 @@ import { expectEvents$ } from "../../../testing/rx-testing";
 import { AudioRecorderEventTypes } from "../../recorder";
 import { of } from "rxjs";
 import { AudioOnsetEvent, AudioPitchEvent } from "../../audio-types";
-import { activeNote$ } from "../activeNote";
+import {
+  activeNote$,
+  frequencyToNearestNote,
+  NearestNote,
+} from "../nearestNote";
 
 function pitchEvent(frequency: number = 440): AudioPitchEvent {
   return {
@@ -39,7 +43,7 @@ function onsetEvent(t = 0): AudioOnsetEvent {
 it("ignores onset events", async (done) => {
   const events = [onsetEvent(), pitchEvent(440), onsetEvent()];
 
-  const expected = ["A"];
+  const expected = [{ value: "A", cents: 0 } as NearestNote];
 
   expectEvents$(activeNote$(of(...events)), expected, done);
 });
@@ -65,11 +69,39 @@ it("produces correct notes for a C Major scale", async (done) => {
         ])
       )
     ),
-    ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B", "C"],
+    [
+      "C",
+      "C#",
+      "D",
+      "D#",
+      "E",
+      "F",
+      "F#",
+      "G",
+      "G#",
+      "A",
+      "A#",
+      "B",
+      "C",
+    ].map((value) => ({ value, cents: 0 })),
     done
   );
 });
 
 it("produces the closest note when pitch is off", async (done) => {
-  expectEvents$(activeNote$(of(...pitchEvents([450, 460]))), ["A", "A#"], done);
+  expectEvents$(
+    activeNote$(of(...pitchEvents([450, 460]))),
+    ["A", "A#"].map((value) => ({ value, cents: 0 })),
+    done
+  );
+});
+
+describe.only("frequencyToNearestNote", () => {
+  it("", () => {
+    expect(frequencyToNearestNote(440)).toEqual({
+      value: "A",
+      octave: 6,
+      cents: 0,
+    });
+  });
 });

@@ -92,7 +92,7 @@ export const audioSetupMachine = createMachine<
           return node;
         },
         onDone: {
-          target: "analyzerSuspended",
+          target: "analyzerSuspendedTmp",
           actions: assign<
             AudioSetupContext,
             DoneInvokeEvent<AudioRecorderNode>
@@ -111,6 +111,12 @@ export const audioSetupMachine = createMachine<
             message: (_, e) => e.data,
           }),
         },
+      },
+    },
+
+    analyzerSuspendedTmp: {
+      after: {
+        0: "analyzerSuspended",
       },
     },
 

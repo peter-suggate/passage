@@ -14,6 +14,7 @@ import {
 } from "./analysis/activeNoteService";
 import { resumeAudio, suspendAudio } from "./setup/audioSetupEffects";
 import { AudioRecorderNode } from "./recorder/webaudio/AudioRecorderNode";
+import { ANIM_CONSTANTS } from "@/transitions/constants";
 
 type Context = {
   audio?: AudioContext;
@@ -25,8 +26,10 @@ type Event = { type: "START" } | { type: "STOP" };
 
 export type AudioState = { context: Context } & (
   | { value: "uninitialized" }
-  | { value: "inSetup" }
+  | { value: "transitionUninitializedToSetup" }
+  | { value: "setupStart" }
   | { value: "running" }
+  | { value: "transitionRunningToSuspended" }
   | { value: "resuming" }
   | { value: "error" }
   | { value: "suspended" }
@@ -44,12 +47,18 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
     states: {
       uninitialized: {
         on: {
-          START: "inSetup",
+          START: "transitionUninitializedToSetup",
+        },
+      },
+
+      transitionUninitializedToSetup: {
+        after: {
+          TRANSITION_DELAY: "setupStart",
         },
       },
 
       // Perform audio setup using the audioSetup child service.
-      inSetup: {
+      setupStart: {
         invoke: {
           id: "audio-setup",
           src: "audioSetup",
@@ -93,7 +102,13 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
             } as ActiveNoteContext),
         },
         on: {
-          STOP: "suspending",
+          STOP: "transitionRunningToSuspended",
+        },
+      },
+
+      transitionRunningToSuspended: {
+        after: {
+          TRANSITION_DELAY: "suspending",
         },
       },
 
@@ -117,11 +132,15 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
       },
 
       suspended: {
-        on: { START: "resuming" },
+        // on: { START: "resuming" },
+        on: { START: "transitionUninitializedToSetup" },
       },
     },
   },
   {
+    delays: {
+      TRANSITION_DELAY: ANIM_CONSTANTS.routerTransitionMs,
+    },
     services: {
       audioSetup: (context, event) => audioSetupMachine,
       resume: (context) => resumeAudio(context.audio!),
@@ -134,7 +153,7 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
 // Machine instance with internal state
 export const makeAudioService = () =>
   interpret(audioMachine)
-    .onTransition((state) => console.log(state.value, state.context))
+    // .onTransition((state) => console.log(state.value, state.context))
     .start();
 
 export type AudioService = ReturnType<typeof makeAudioService>;

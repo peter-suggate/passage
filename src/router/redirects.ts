@@ -2,10 +2,16 @@ import { audio$, audioService } from "@/lib/audio";
 import { tap } from "rxjs/operators";
 import { Routes } from "./Routes";
 import { NavigationGuardNext } from "vue-router";
+import {
+  viewElementIds,
+  updateViewDisplayState,
+} from "@/transitions/constants";
 
 export function redirectOnAudioServiceStateChange$(vue: Vue) {
   return audio$.pipe(
     tap((e) => {
+      viewElementIds.forEach((id) => updateViewDisplayState(id));
+
       switch (e.value) {
         case "uninitialized": {
           if (vue.$router.currentRoute.path !== Routes.Home) {
@@ -13,7 +19,7 @@ export function redirectOnAudioServiceStateChange$(vue: Vue) {
           }
           break;
         }
-        case "inSetup": {
+        case "transitionUninitializedToSetup": {
           vue.$router.push({ path: Routes.Setup });
           break;
         }

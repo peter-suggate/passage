@@ -20,7 +20,7 @@ class AudioProcessor extends AudioWorkletProcessor {
 
       this.pitchDetector = this.wasmSamplesProcessor.create_pitch_detector(
         "McLeod",
-        1024
+        2048
       );
 
       this.port.postMessage({
@@ -51,14 +51,14 @@ class AudioProcessor extends AudioWorkletProcessor {
 
     for (let channel = 0; channel < output.length; ++channel) {
       const inputSamples = input[channel];
-      const outputSamples = output[channel];
+      // const outputSamples = output[channel];
 
       // output[channel].set(input[channel]);
-      inputSamples.forEach((sample, index) => {
-        outputSamples[index] = sample;
-      });
+      // inputSamples.forEach((sample, index) => {
+      //   outputSamples[index] = sample;
+      // });
 
-      this.wasmSamplesProcessor.add_samples_chunk(outputSamples);
+      this.wasmSamplesProcessor.add_samples_chunk(inputSamples);
 
       if (
         this.pitchDetector &&

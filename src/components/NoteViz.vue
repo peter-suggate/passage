@@ -3,7 +3,13 @@
     <v-row class="text-center">
       <v-col cols="12">
         <v-row justify="center">
-          <h1 class="display-4">{{ note$ }}</h1>
+          <v-col v-if="note$">
+            <h1 class="display-4">{{ note$.value }}</h1>
+            <h1 class="display-1">octave: {{ note$.octave }}</h1>
+            <h1 class="display-1">cents: {{ Math.round(note$.cents) }}</h1>
+            <h1 class="display-2">clarity: {{ note$.clarity.toFixed(1) }}</h1>
+            <h1 class="display-2">age: {{ note$.age }}</h1>
+          </v-col>
         </v-row>
       </v-col>
     </v-row>
@@ -14,10 +20,12 @@
 import Vue from "vue";
 import { mergeMap } from "rxjs/operators";
 import { audio$, audioService } from "@/lib/audio";
-import { ActiveNoteState } from "../lib/audio/analysis/activeNoteService";
+import {
+  ActiveNoteState,
+  NoteInfo
+} from "../lib/audio/analysis/activeNoteService";
 import { AudioState } from "../lib/audio/audioService";
 import { of, Observable } from "rxjs";
-import { Note } from "../lib/audio/analysis";
 
 export default Vue.extend({
   name: "NoteViz",
@@ -56,7 +64,7 @@ export default Vue.extend({
   subscriptions: function(this) {
     return {
       note$: audio$.pipe(
-        mergeMap<AudioState, Observable<Note | undefined>>(e => {
+        mergeMap<AudioState, Observable<NoteInfo | undefined>>(e => {
           if (e.value === "running") {
             const service = audioService.children.get("running");
 

@@ -29,7 +29,7 @@ it("enters setup when started", () => {
   const machine = testMachine();
 
   expect(machine.transition(machine.initialState, "START").value).toBe(
-    "inSetup"
+    "setupStart"
   );
 });
 

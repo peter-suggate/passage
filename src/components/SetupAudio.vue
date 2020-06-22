@@ -1,16 +1,20 @@
 <template>
   <v-container>
-    <v-row class="text-center">
-      <v-col cols="12">
+    <v-row class="text-center" justify="center">
+      <!-- <v-col cols="12">
         <v-row justify="center">
           <Logo />
         </v-row>
-      </v-col>
+      </v-col> -->
 
-      <v-col class="mb-4">
-        <br />
-        <h1 class="h1">{{ status.title }}...</h1>
-        <h2 v-if="status.message" class="h2">{{ status.message }}...</h2>
+      <v-col cols="12" sm="12" md="4">
+        <v-sheet elevation="4" class="mx-auto" :id="PRIMARY_ACTION_ELEM_ID">
+          <br />
+          <h1 class="h1">{{ status.title }}...</h1>
+          <h2 v-if="status.message" class="h2">{{ status.message }}</h2>
+          <br />
+          <v-btn v-on:click="cancel">Cancel setup</v-btn>
+        </v-sheet>
       </v-col>
     </v-row>
   </v-container>
@@ -19,6 +23,7 @@
 <script lang="ts">
 import Vue from "vue";
 import Logo from "@/components/general/Logo.vue";
+import { VIEW_ELEM_ID, PRIMARY_ACTION_ELEM_ID } from "@/transitions";
 import { Routes } from "@/router/Routes";
 import { map } from "rxjs/operators";
 import { audio$, audioService } from "../lib/audio";
@@ -27,25 +32,20 @@ export default Vue.extend({
   name: "SetupAudio",
 
   components: {
-    Logo
+    // Logo,
   },
 
   data: () => ({
-    Routes
-    // current: audioService.initialState
+    Routes,
+    PRIMARY_ACTION_ELEM_ID,
+    // VIEW_ELEM_ID,
   }),
-
-  // created() {
-  //   audioService.onTransition(state => {
-  //     this.current = state;
-  //   });
-  // },
 
   subscriptions: function(this) {
     return {
       status: audio$.pipe(
-        map(e => {
-          if (e.value === "inSetup") {
+        map((e) => {
+          if (e.value === "setupStart") {
             const setupService = audioService.children.get("audio-setup");
 
             if (setupService) {
@@ -54,43 +54,44 @@ export default Vue.extend({
               switch (setupState.value) {
                 case "detectingAudio":
                   return {
-                    title: "Initializing",
-                    message: "Detecting microphone"
+                    title: "Starting",
+                    message: "Detecting microphone...",
                   };
                 case "createAudioAnalyzer":
                   return {
-                    title: "Initializing",
-                    message: "Loading analyzers"
+                    title: "Starting",
+                    message: "Loading analyzers...",
                   };
                 case "noAudioFound":
                   return { title: "No microphone found" };
                 case "analyzerError":
                   return {
                     title: "Couldn't complete audio setup",
-                    message: setupState.context.message
+                    message: setupState.context.message,
                   };
                 default:
                   return {
                     title: e.value,
-                    message: setupState.context.message
+                    message: setupState.context.message,
                   };
               }
-              // e.children.audioSetupMachine;
-              // audioService.children['']
             }
           }
 
           return {
             title: "Error",
-            message: "Shouldn't ever get here"
+            message: "Shouldn't ever get here",
           };
-          // console.log(e.value);
-          // switch (e.value) {
-          // }
         })
-      )
+      ),
     };
-  }
+  },
+
+  methods: {
+    cancel: function() {
+      // audioService.send("START");
+    },
+  },
 
   // subscriptions: function(this) {
   //   // const service = audioSetupService();

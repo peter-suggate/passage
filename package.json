@@ -16,6 +16,7 @@
     "@vue/composition-api": "^0.6.3",
     "core-js": "^3.6.5",
     "fp-ts": "^2.6.5",
+    "gsap": "^3.3.4",
     "music-analyzer-wasm-rs": "file:../music-analyzer-wasm-rs/pkg",
     "register-service-worker": "^1.7.1",
     "rxjs": "^6.5.5",
@@ -26,6 +27,7 @@
     "xstate": "^4.10.0"
   },
   "devDependencies": {
+    "@types/gsap": "^1.20.2",
     "@types/jest": "^24.0.19",
     "@typescript-eslint/eslint-plugin": "^2.33.0",
     "@typescript-eslint/parser": "^2.33.0",
