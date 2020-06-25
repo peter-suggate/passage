@@ -47,15 +47,16 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
     states: {
       uninitialized: {
         on: {
-          START: "transitionUninitializedToSetup",
+          START: "setupStart",
+          // START: "transitionUninitializedToSetup",
         },
       },
 
-      transitionUninitializedToSetup: {
-        after: {
-          TRANSITION_DELAY: "setupStart",
-        },
-      },
+      // transitionUninitializedToSetup: {
+      //   after: {
+      //     TRANSITION_DELAY: "setupStart",
+      //   },
+      // },
 
       // Perform audio setup using the audioSetup child service.
       setupStart: {
@@ -102,15 +103,16 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
             } as ActiveNoteContext),
         },
         on: {
-          STOP: "transitionRunningToSuspended",
+          STOP: "suspending",
+          // STOP: "transitionRunningToSuspended",
         },
       },
 
-      transitionRunningToSuspended: {
-        after: {
-          TRANSITION_DELAY: "suspending",
-        },
-      },
+      // transitionRunningToSuspended: {
+      //   after: {
+      //     TRANSITION_DELAY: "suspending",
+      //   },
+      // },
 
       suspending: {
         invoke: {
@@ -132,8 +134,8 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
       },
 
       suspended: {
-        // on: { START: "resuming" },
-        on: { START: "transitionUninitializedToSetup" },
+        on: { START: "resuming" },
+        // on: { START: "transitionUninitializedToSetup" },
       },
     },
   },

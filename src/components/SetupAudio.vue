@@ -5,7 +5,7 @@
         <v-row justify="center">
           <Logo />
         </v-row>
-      </v-col> -->
+      </v-col>-->
 
       <v-col cols="12" sm="12" md="4">
         <v-sheet elevation="4" class="mx-auto" :id="PRIMARY_ACTION_ELEM_ID">
@@ -37,15 +37,20 @@ export default Vue.extend({
 
   data: () => ({
     Routes,
-    PRIMARY_ACTION_ELEM_ID,
+    PRIMARY_ACTION_ELEM_ID
     // VIEW_ELEM_ID,
   }),
 
   subscriptions: function(this) {
     return {
       status: audio$.pipe(
-        map((e) => {
-          if (e.value === "setupStart") {
+        map(e => {
+          if (e.value === "uninitialized") {
+            return {
+              title: "Not setup",
+              message: "keep scrolling down.."
+            };
+          } else if (e.value === "setupStart") {
             const setupService = audioService.children.get("audio-setup");
 
             if (setupService) {
@@ -55,43 +60,43 @@ export default Vue.extend({
                 case "detectingAudio":
                   return {
                     title: "Starting",
-                    message: "Detecting microphone...",
+                    message: "Detecting microphone..."
                   };
                 case "createAudioAnalyzer":
                   return {
                     title: "Starting",
-                    message: "Loading analyzers...",
+                    message: "Loading analyzers..."
                   };
                 case "noAudioFound":
                   return { title: "No microphone found" };
                 case "analyzerError":
                   return {
                     title: "Couldn't complete audio setup",
-                    message: setupState.context.message,
+                    message: setupState.context.message
                   };
                 default:
                   return {
                     title: e.value,
-                    message: setupState.context.message,
+                    message: setupState.context.message
                   };
               }
             }
           }
 
           return {
-            title: "Error",
-            message: "Shouldn't ever get here",
+            title: "Setup complete",
+            message: "Keep scrolling down.."
           };
         })
-      ),
+      )
     };
   },
 
   methods: {
     cancel: function() {
       // audioService.send("START");
-    },
-  },
+    }
+  }
 
   // subscriptions: function(this) {
   //   // const service = audioSetupService();
