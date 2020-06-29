@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@vue/composition-api": "^0.6.3",
+    "@xstate/vue": "^0.1.1",
     "core-js": "^3.6.5",
     "fp-ts": "^2.6.5",
     "gsap": "^3.3.4",

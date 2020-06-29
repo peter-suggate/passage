@@ -24,16 +24,15 @@ type Context = {
 
 type Event = { type: "START" } | { type: "STOP" };
 
-export type AudioState = { context: Context } & (
-  | { value: "uninitialized" }
-  | { value: "transitionUninitializedToSetup" }
-  | { value: "setupStart" }
-  | { value: "running" }
-  | { value: "transitionRunningToSuspended" }
-  | { value: "resuming" }
-  | { value: "error" }
-  | { value: "suspended" }
-);
+export type AudioValidStates =
+  | "uninitialized"
+  | "setupStart"
+  | "running"
+  | "resuming"
+  | "error"
+  | "suspended";
+
+export type AudioState = { context: Context } & { value: AudioValidStates };
 
 export const audioMachine = createMachine<Context, Event, AudioState>(
   {
@@ -48,15 +47,8 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
       uninitialized: {
         on: {
           START: "setupStart",
-          // START: "transitionUninitializedToSetup",
         },
       },
-
-      // transitionUninitializedToSetup: {
-      //   after: {
-      //     TRANSITION_DELAY: "setupStart",
-      //   },
-      // },
 
       // Perform audio setup using the audioSetup child service.
       setupStart: {
@@ -95,9 +87,9 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
         invoke: {
           id: "running",
           src: "analyzer",
-          data: (ctx: Context) =>
+          data: (context: Context) =>
             ({
-              analyzerEvents$: ctx.analyzer$,
+              analyzerEvents$: context.analyzer$,
               note: undefined,
               // (context, event) => context.setup
             } as ActiveNoteContext),
@@ -155,7 +147,7 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
 // Machine instance with internal state
 export const makeAudioService = () =>
   interpret(audioMachine)
-    // .onTransition((state) => console.log(state.value, state.context))
+    .onTransition((state) => console.log(state.value, state.context))
     .start();
 
 export type AudioService = ReturnType<typeof makeAudioService>;

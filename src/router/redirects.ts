@@ -19,10 +19,10 @@ export function redirectOnAudioServiceStateChange$(vue: Vue) {
           }
           break;
         }
-        case "transitionUninitializedToSetup": {
-          vue.$router.push({ path: Routes.Setup });
-          break;
-        }
+        // case "transitionUninitializedToSetup": {
+        //   vue.$router.push({ path: Routes.Setup });
+        //   break;
+        // }
         case "running": {
           vue.$router.push({ path: Routes.Listen });
           break;

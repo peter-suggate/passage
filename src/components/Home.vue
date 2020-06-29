@@ -10,14 +10,14 @@ import Logo from "@/components/general/Logo.vue";
 import { Routes } from "@/router/Routes";
 
 export default Vue.extend({
-  name: "HelloWorld",
+  name: "Home",
 
   components: {
-    Logo,
+    Logo
   },
 
   data: () => ({
-    Routes,
-  }),
+    Routes
+  })
 });
 </script>

@@ -83,32 +83,7 @@ export const activeNoteMachine = createMachine<
                 };
               })
             );
-            // return combineLatest(onsets$, pitches$).pipe(
-            //   map((e) => {
-            //     const { pitch } = cast<AudioPitchEvent>(e);
-            //     return {
-            //       value: frequencyToNote(pitch.frequency),
-            //       clarity: pitch.clarity,
-            //       age: 0,
-            //     };
-            //   })
-            // );
           },
-          // context.analyzerEvents$?.pipe(
-          //   partition(
-          //     e.type
-          //   )
-          //   // takeL
-          //   filter((e) => e.type === "pitch"),
-          //   map((e) => {
-          //     const { pitch } = cast<AudioPitchEvent>(e);
-          //     return {
-          //       value: frequencyToNote(pitch.frequency),
-          //       clarity: pitch.clarity,
-          //       age: 0,
-          //     };
-          //   })
-          // ),
         }),
 
         invoke: {

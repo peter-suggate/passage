@@ -1725,6 +1725,11 @@
     "@xstate/graph" "^1.1.0"
     chalk "^2.4.2"
 
+"@xstate/vue@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@xstate/vue/-/vue-0.1.1.tgz#0aebee791514ada4289d2cbb0ee713d1444a19ff"
+  integrity sha512-rcM1ttkYPV10LhGD/mnn2WdV66wdJOMk9VWKiXOzFAhSDDUQsTS0sVh6k4YODRu9nPT1UKBrKnd+uZna3xZqYA==
+
 "@xtuc/ieee754@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@xtuc/ieee754/-/ieee754-1.2.0.tgz#eef014a3145ae477a1cbc00cd1e552336dceb790"

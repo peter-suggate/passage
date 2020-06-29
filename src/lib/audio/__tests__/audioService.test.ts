@@ -33,22 +33,22 @@ it("enters setup when started", () => {
   );
 });
 
-it("should go to resuming state when audio setup succeeds", async (done) => {
-  const audio = new TestAudioContext();
-  const audioSetup = async () => audio;
+// it("should go to resuming state when audio setup succeeds", async (done) => {
+//   const audio = new TestAudioContext();
+//   const audioSetup = async () => audio;
 
-  const machine = testMachine({
-    audioSetup,
-  });
+//   const machine = testMachine({
+//     audioSetup,
+//   });
 
-  interpret(machine)
-    .onTransition((state) => {
-      if (state.matches("resuming")) {
-        expect(state.context.audio).toEqual(audio);
+//   interpret(machine)
+//     .onTransition((state) => {
+//       if (state.matches("resuming")) {
+//         expect(state.context.audio).toEqual(audio);
 
-        done();
-      }
-    })
-    .start()
-    .send("START");
-});
+//         done();
+//       }
+//     })
+//     .start()
+//     .send("START");
+// });

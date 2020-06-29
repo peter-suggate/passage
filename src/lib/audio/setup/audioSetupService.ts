@@ -1,24 +1,32 @@
-import { createMachine, interpret, assign, DoneInvokeEvent } from "xstate";
+import {
+  createMachine,
+  interpret,
+  assign,
+  DoneInvokeEvent,
+  sendParent,
+} from "xstate";
 import { fromEventPattern } from "rxjs";
 import { shareReplay } from "rxjs/operators";
 import { getWebAudioMediaStream, connectAnalyzer } from "./audioSetupEffects";
 import { AudioRecorderNode } from "../recorder/webaudio/AudioRecorderNode";
 
-export type AudioSetupContext = {
+type WebAudio = {
   media?: MediaStream;
   audio?: AudioContext;
+};
+
+export type AudioSetupContext = WebAudio & {
   node?: AudioRecorderNode;
   message?: string;
 };
 
 type Event =
-  | { type: "DETECT" }
-  | { type: "SUSPEND" }
-  | { type: "RESUME" }
-  | { type: "CANCEL" };
+  // | { type: "DETECT" }
+  { type: "SUSPEND" } | { type: "RESUME" } | { type: "CANCEL" };
 
-export type AudioSetupState = { context: AudioSetupContext } & (
-  | { value: "uninitialized" }
+export type AudioSetupState = {
+  context: AudioSetupContext;
+} & ( // | { value: "uninitialized" }
   | { value: "detectingAudio" }
   | { value: "audioFound" }
   | { value: "noAudioFound" }
@@ -27,114 +35,109 @@ export type AudioSetupState = { context: AudioSetupContext } & (
   | { value: "analyzerError" }
 );
 
+const services = {};
+
+const actions = {};
+
 export const audioSetupMachine = createMachine<
   AudioSetupContext,
   Event,
   AudioSetupState
->({
-  id: "WebAudioSetup",
-  initial: "detectingAudio",
-  context: {
-    media: undefined,
-    audio: undefined,
-  } as AudioSetupContext,
-  states: {
-    uninitialized: {
-      on: {
-        DETECT: "detectingAudio",
-      },
-    },
+>(
+  {
+    id: "WebAudioSetup",
+    initial: "detectingAudio",
+    context: {},
+    states: {
+      // uninitialized: {
+      //   on: {
+      //     DETECT: "detectingAudio",
+      //   },
+      // },
 
-    detectingAudio: {
-      invoke: {
-        id: "detectWebAudio",
-        src: async () => {
-          const media = await getWebAudioMediaStream();
+      detectingAudio: {
+        invoke: {
+          src: "detectWebAudio",
+          // onEntry: [sendParent("SETUP.DETECTING_AUDIO")],
+          onDone: {
+            target: "createAudioAnalyzer",
+            actions: assign((_context, event) => event.data),
+          },
+          onError: {
+            target: "noAudioFound",
+            actions: assign((_context, event) => ({ message: event.data })),
+          },
+        },
+        on: {
+          CANCEL: "noAudioFound",
+        },
+      },
+
+      noAudioFound: {
+        type: "final",
+        // on: { DETECT: "detectingAudio" }
+      },
+
+      createAudioAnalyzer: {
+        invoke: {
+          src: "createAnalyzer",
+          onDone: {
+            target: "analyzerSuspended",
+            actions: assign((context, event) => ({
+              ...context,
+              node: event.data,
+            })),
+          },
+          onError: {
+            target: "analyzerError",
+            actions: assign<AudioSetupContext, DoneInvokeEvent<string>>({
+              media: (context) => context.media,
+              audio: (context) => context.audio,
+              node: undefined,
+              message: (_, e) => e.data,
+            }),
+          },
+        },
+      },
+
+      analyzerSuspended: {
+        type: "final",
+        data: (context) => {
           return {
-            media,
-            audio: new globalThis.AudioContext(),
+            audio: context.audio,
+            node: context.node,
           };
         },
-        onDone: {
-          target: "createAudioAnalyzer",
-          actions: assign<
-            AudioSetupContext,
-            DoneInvokeEvent<AudioSetupContext>
-          >({
-            media: (_, e) => e.data.media,
-            audio: (_, e) => e.data.audio,
-            message: undefined,
-          }),
-        },
-        onError: {
-          target: "noAudioFound",
-          actions: assign<AudioSetupContext, DoneInvokeEvent<string>>({
-            media: undefined,
-            audio: undefined,
-            message: (_, e) => e.data,
-          }),
-        },
       },
-      on: {
-        CANCEL: "uninitialized",
+
+      analyzerError: {
+        type: "final",
+        // on: { DETECT: "createAudioAnalyzer" },
       },
-    },
-
-    noAudioFound: { on: { DETECT: "detectingAudio" } },
-
-    createAudioAnalyzer: {
-      invoke: {
-        src: async (context) => {
-          const node = await AudioRecorderNode.create(context.audio!);
-
-          connectAnalyzer(context.audio!, node, context.media!);
-
-          return node;
-        },
-        onDone: {
-          target: "analyzerSuspendedTmp",
-          actions: assign<
-            AudioSetupContext,
-            DoneInvokeEvent<AudioRecorderNode>
-          >({
-            media: (context) => context.media,
-            audio: (context) => context.audio,
-            node: (_, e) => e.data,
-          }),
-        },
-        onError: {
-          target: "analyzerError",
-          actions: assign<AudioSetupContext, DoneInvokeEvent<string>>({
-            media: (context) => context.media,
-            audio: (context) => context.audio,
-            node: undefined,
-            message: (_, e) => e.data,
-          }),
-        },
-      },
-    },
-
-    analyzerSuspendedTmp: {
-      after: {
-        0: "analyzerSuspended",
-      },
-    },
-
-    analyzerSuspended: {
-      type: "final",
-      data: (context) => {
-        return {
-          audio: context.audio,
-          node: context.node,
-        };
-      },
-    },
-
-    analyzerError: {
-      on: { DETECT: "createAudioAnalyzer" },
     },
   },
-});
+  {
+    services: {
+      detectWebAudio: async () => {
+        const media = await getWebAudioMediaStream();
+
+        const audio = new globalThis.AudioContext();
+
+        return {
+          media,
+          audio,
+        };
+      },
+      createAnalyzer: async (context) => {
+        const node = await AudioRecorderNode.create(context.audio!);
+
+        connectAnalyzer(context.audio!, node, context.media!);
+
+        return node;
+      },
+    },
+  }
+);
 
 // Machine instance with internal state
 export const makeAudioSetupService = () =>

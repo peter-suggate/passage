@@ -5,7 +5,7 @@ import {
 } from "../recorder-types";
 
 function scriptUrl(scriptPath: string) {
-  const publicUrl = "http://localhost:8080";
+  const publicUrl = window.location.href;
 
   return `${publicUrl}/${scriptPath}`;
 }
@@ -42,13 +42,17 @@ export class AudioRecorderNode extends Subject<AudioRecorderEventTypes> {
     // Add our audio processor worklet to the context.
     try {
       await context.audioWorklet.addModule(AudioRecorderNode.processorUrl);
+      console.log("processor added");
     } catch (e) {
+      console.log("error adding processor module");
       throw new Error(
         `Failed to load audio analyzer worklet at url: ${AudioRecorderNode.processorUrl}. Further info: ${e.message}`
       );
     }
 
     try {
+      console.log("loading wasm");
+
       const wasmBytes = await AudioRecorderNode.fetchMusicAnalyzerWasm();
 
       return new AudioRecorderNode(context, wasmBytes);
