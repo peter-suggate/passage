@@ -1,18 +1,28 @@
 <template>
-  <div class="setup">
-    <div style="height: 30vh" />
-    <v-col cols="12">
+  <!-- <v-container class="setup" style="height: 100%"> -->
+  <!-- <div style="height: 30vh" /> -->
+  <v-container fluid style="height: 100%">
+    <v-row>
+      <v-col cols="12">
+        <v-row align="center" justify="center">
+          <div id="triggerSetup">
+            <SetupAudio />
+          </div>
+        </v-row>
+      </v-col>
+    </v-row>
+  </v-container>
+  <!-- <v-row style="height: 100%">
+    <v-col>
+      <v-spacer />
       <v-col justify="center">
         <div id="triggerSetup">
           <SetupAudio />
         </div>
-        <!-- <div>
-          <h3>Loading...</h3>
-        </div> -->
-        <div style="height: 30vh" />
       </v-col>
+      <v-spacer />
     </v-col>
-  </div>
+  </v-row> -->
 </template>
 
 <script lang="ts">

@@ -105,6 +105,7 @@ const homePage = pageConfig({
 
 const setupPage = pageConfig({
   component: "Setup",
+  transform: scrollParallax,
   opacity: opacityFadeinout(0.1),
 });
 
@@ -116,7 +117,7 @@ const listenPage = pageConfig({
 export const appPageConfigs: Record<AudioValidStates, PageConfig[]> = {
   uninitialized: [homePage, setupPage],
   setupStart: [homePage, setupPage],
-  error: [],
+  error: [homePage, setupPage],
   resuming: [homePage, setupPage, listenPage],
   running: [homePage, setupPage, listenPage],
   suspended: [homePage, setupPage, listenPage],

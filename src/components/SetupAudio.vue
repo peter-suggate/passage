@@ -83,6 +83,8 @@ export default Vue.extend({
                 settingUp: true,
               };
             }
+            case "error":
+              return { title: `Error: ${e.context.message}`, settingUp: false };
             case "resuming":
             case "running":
             default: {

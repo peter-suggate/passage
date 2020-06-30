@@ -9,6 +9,7 @@ import { fromEventPattern } from "rxjs";
 import { shareReplay } from "rxjs/operators";
 import { getWebAudioMediaStream, connectAnalyzer } from "./audioSetupEffects";
 import { AudioRecorderNode } from "../recorder/webaudio/AudioRecorderNode";
+import { escalate } from "xstate/lib/actions";
 
 type WebAudio = {
   media?: MediaStream;
@@ -74,7 +75,13 @@ export const audioSetupMachine = createMachine<
       },
 
       noAudioFound: {
-        type: "final",
+        // type: "final",
+        entry: escalate("No audio recording device was found"),
+        // data: (context) => {
+        //   return {
+        //     message: context.message,
+        //   };
+        // },
         // on: { DETECT: "detectingAudio" }
       },
 

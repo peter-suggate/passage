@@ -59,10 +59,17 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
             target: "resuming",
             actions: assign<Context, DoneInvokeEvent<AudioSetupContext>>(
               (_, e) => ({
+                message: e.data.message,
                 audio: e.data.audio,
                 analyzer$: e.data.node,
               })
             ),
+          },
+          onError: {
+            target: "error",
+            actions: assign((_, e) => ({
+              message: e.data,
+            })),
           },
         },
       },
