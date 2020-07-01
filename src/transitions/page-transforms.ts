@@ -40,7 +40,6 @@ const scrollParallax = (
 type Opaque<K, T> = T & { __TYPE__: K };
 type Fraction = Opaque<"Fraction", number>;
 
-// export type Fraction = { type: "fraction"; value: number };
 export const fraction = (value: number): Fraction => value as Fraction;
 
 const fractionToPixels = (fraction: Fraction, sizePixels: number) =>
@@ -59,14 +58,6 @@ export const scrollKeepVisible = (
       (scrollWithinPage - beginYPix) *
       easeInQuart(scrollWithinPage - beginYPix);
   }
-  // const maxTravel = pageHeight - pixFromTopOfView;
-  // console.log(
-  //   maxTravel * easeFn((scrollY - pageTopY) / pageHeight),
-  //   scrollY,
-  //   pageTopY,
-  //   pageHeight,
-  //   maxTravel
-  // );
   return offsetY;
 };
 
@@ -82,9 +73,9 @@ const opacityFadeinout = (pageVisibleFractionForFullOpacity = 0.3) => (
   const viewCenter = scrollY + 0.5 * pageHeight;
   const pageCenter = pageTopY + 0.5 * pageHeight;
 
-  const distFromCenter = fraction(
-    Math.abs(viewCenter - pageCenter) / pageHeight
-  );
+  const distFromCenter =
+    2 * fraction(Math.abs(viewCenter - pageCenter) / pageHeight);
+
   const opacity =
     1 - Math.max(0, distFromCenter - pageVisibleFractionForFullOpacity);
   return easeInQuart(opacity);
@@ -111,7 +102,6 @@ const setupPage = pageConfig({
 
 const listenPage = pageConfig({
   component: "Listen",
-  // opacity: opacityFadein(0.3),
 });
 
 export const appPageConfigs: Record<AudioValidStates, PageConfig[]> = {
@@ -136,21 +126,13 @@ export const pageStyles$ = () => {
     withLatestFrom(audio$),
     map(([_, state]) => ({ scrollY: window.scrollY, state: state.value })),
     startWith({ scrollY: window.scrollY, state: "uninitialized" }),
-    // tap(({ scrollY, state }) =>
-    //   console.log("scrollY", scrollY, "state", state)
-    // ),
     map(({ scrollY, state }) =>
       appPageConfigs[state as AudioValidStates].map((page, index) => ({
         height: `${100 * PAGE_SIZE_FRAC}vh`,
-        // transform: page.transform(
-        //   scrollY,
-        //   index * window.innerHeight,
-        //   window.innerHeight
-        // ),
         opacity: page.opacity(scrollY, pageTop(index), pageHeight()),
         willChange: "opacity",
         background:
-          index === 0 ? "transparent" : index === 1 ? "transparent" : "green", // willChange: "transform, opacity",
+          index === 0 ? "blue" : index === 1 ? "transparent" : "green",
       }))
     )
   );
@@ -182,45 +164,12 @@ export const pageScrollY$ = (pageIndex: number) => {
   );
 };
 
-// export const scrollKeepVisibleStyle$ = (
-//   pageIndex: number,
-//   beginY: Fraction,
-//   endY: Fraction
-// ) => {
-//   return fromEvent(window, "scroll").pipe(
-//     map(() => window.scrollY),
-//     startWith(window.scrollY),
-//     map((scrollY) => {
-//       const offset = scrollKeepVisible(beginY, endY)(
-//         scrollY,
-//         pageIndex * window.innerHeight,
-//         window.innerHeight
-//       );
-
-//       if (offset > 0) {
-//         return {
-//           transform: `translateY(${offset}px)`,
-//           willChange: "transform",
-//         };
-//       }
-
-//       return {
-//         position: "sticky",
-//         top: beginY,
-//       };
-//     })
-//   );
-// };
-
 export const opacityFadeout = (
   scrollYRelPageFrac: Fraction,
   scrollFractionFullyHidden: Fraction
 ) => Math.max(0, 1.0 - scrollYRelPageFrac / scrollFractionFullyHidden);
 
 export const offsetInPage = (posY: Fraction) => `translateY(${posY * 100}vh)`;
-
-// export const fixedPositionInPage = (posY: Fraction) =>
-//   scrollKeepVisible(posY, posY);
 
 export const hideOnScrollStyle$ = (
   pageIndex: number,

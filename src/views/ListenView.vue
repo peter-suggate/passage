@@ -1,19 +1,11 @@
 <template>
   <div class="listen">
-    <v-container>
+    <v-container id="triggerListen">
       <v-row class="text-center">
         <v-col class="mb-4">
-          <!-- <div v-if="!isStopping$"> -->
-          <NoteViz :id="VIEW_ELEM_ID" style="height: 60vh" />
+          <NoteViz style="height: 60vh" />
           <br />
-          <v-btn :id="PRIMARY_ACTION_ELEM_ID" v-on:click="finished">Finished</v-btn>
-          <!-- </div> -->
-          <!-- <v-progress-circular
-            v-if="isStopping$"
-            :id="PRIMARY_ACTION_ELEM_ID"
-            indeterminate
-            color="primary"
-          ></v-progress-circular>-->
+          <v-btn v-on:click="finished">Finished</v-btn>
         </v-col>
       </v-row>
     </v-container>
@@ -26,34 +18,43 @@ import Vue from "vue";
 import { audioService } from "../lib/audio";
 import { redirect } from "../router";
 import NoteViz from "@/components/NoteViz.vue";
-import {
-  // animateTransition,
-  VIEW_ELEM_ID,
-  PRIMARY_ACTION_ELEM_ID,
-  animateTransitions
-} from "../transitions/constants";
-// import { map, tap } from "rxjs/operators";
 
 export default Vue.extend({
   name: "ListenView",
 
   components: {
-    NoteViz
+    NoteViz,
   },
 
-  data: () => ({
-    PRIMARY_ACTION_ELEM_ID,
-    VIEW_ELEM_ID
-  }),
+  data: () =>
+    ({
+      observer: undefined,
+    } as {
+      observer: undefined | IntersectionObserver;
+    }),
+
+  mounted() {
+    const callback: IntersectionObserverCallback = (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          audioService.send("RESUME");
+        }
+      });
+    };
+
+    this.observer = new IntersectionObserver(callback, {
+      root: null,
+      threshold: 0.5,
+    });
+
+    const target = document.querySelector("#triggerListen");
+    if (target) this.observer.observe(target);
+  },
 
   methods: {
     finished: function() {
       audioService.send("STOP");
-    }
-  },
-
-  mounted() {
-    animateTransitions([VIEW_ELEM_ID]);
+    },
   },
 
   // subscriptions: function(this) {
@@ -71,6 +72,6 @@ export default Vue.extend({
 
   beforeRouteEnter(to, from, next) {
     redirect(next);
-  }
+  },
 });
 </script>

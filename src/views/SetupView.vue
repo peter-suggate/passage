@@ -1,34 +1,32 @@
 <template>
-  <!-- <v-container class="setup" style="height: 100%"> -->
-  <!-- <div style="height: 30vh" /> -->
   <v-container fluid style="height: 100%">
-    <v-row>
-      <v-col cols="12">
-        <v-row align="center" justify="center">
-          <div id="triggerSetup">
-            <SetupAudio />
-          </div>
-        </v-row>
+    <v-row align="center" justify="center" style="height: 100%">
+      <v-col id="triggerSetup">
+        <v-row><SetupAudio /></v-row>
+        <v-row v-if="setupComplete$" align="center" justify="center"
+          ><v-btn
+            v-bind:style="buttonStyle$"
+            v-on:click="listen"
+            justify="center"
+            >Start</v-btn
+          ></v-row
+        >
       </v-col>
     </v-row>
   </v-container>
-  <!-- <v-row style="height: 100%">
-    <v-col>
-      <v-spacer />
-      <v-col justify="center">
-        <div id="triggerSetup">
-          <SetupAudio />
-        </div>
-      </v-col>
-      <v-spacer />
-    </v-col>
-  </v-row> -->
 </template>
 
 <script lang="ts">
 import Vue from "vue";
 import SetupAudio from "@/components/SetupAudio.vue";
-import { audioService } from "../lib/audio";
+import { audioService, audio$ } from "../lib/audio";
+import {
+  pageScrollY$,
+  opacityFadeout,
+  fraction,
+  PAGE_SIZE_FRAC,
+} from "../transitions/page-transforms";
+import { map } from "rxjs/operators";
 
 export default Vue.extend({
   name: "SetupView",
@@ -40,15 +38,12 @@ export default Vue.extend({
   data: () =>
     ({
       observer: undefined,
-      // activePages: appPageConfigs.uninitialized
     } as {
       observer: undefined | IntersectionObserver;
-      // activePages: PageConfig[];
-      // componentNames: (keyof PageComponents)[];
     }),
 
   mounted() {
-    const callback: IntersectionObserverCallback = (entries, observer) => {
+    const callback: IntersectionObserverCallback = (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           audioService.send("START");
@@ -58,15 +53,37 @@ export default Vue.extend({
 
     this.observer = new IntersectionObserver(callback, {
       root: null,
-      threshold: 0,
+      threshold: 0.5,
     });
 
     const target = document.querySelector("#triggerSetup");
     if (target) this.observer.observe(target);
   },
 
-  // beforeRouteEnter(to, from, next) {
-  //   redirect(next);
-  // }
+  subscriptions: function(this) {
+    const pageIndex = 1;
+    return {
+      setupComplete$: audio$.pipe(map((e) => e.value === "suspended")),
+      buttonStyle$: pageScrollY$(pageIndex).pipe(
+        map(({ scrollYRelPageFrac }) => ({
+          // Fully hidden at 10% scroll.
+          opacity: opacityFadeout(scrollYRelPageFrac, fraction(0.1)),
+
+          willChange: "opacity",
+        }))
+      ),
+    };
+  },
+
+  methods: {
+    listen: function() {
+      audioService.send("RESUME");
+
+      window.scrollBy({
+        top: PAGE_SIZE_FRAC * window.innerHeight,
+        behavior: "smooth",
+      });
+    },
+  },
 });
 </script>

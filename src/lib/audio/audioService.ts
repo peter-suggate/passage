@@ -22,7 +22,7 @@ type Context = {
   message?: string;
 };
 
-type Event = { type: "START" } | { type: "STOP" };
+type Event = { type: "START" } | { type: "RESUME" } | { type: "STOP" };
 
 export type AudioValidStates =
   | "uninitialized"
@@ -56,7 +56,7 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
           id: "audio-setup",
           src: "audioSetup",
           onDone: {
-            target: "resuming",
+            target: "suspended",
             actions: assign<Context, DoneInvokeEvent<AudioSetupContext>>(
               (_, e) => ({
                 message: e.data.message,
@@ -133,7 +133,7 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
       },
 
       suspended: {
-        on: { START: "resuming" },
+        on: { RESUME: "resuming" },
         // on: { START: "transitionUninitializedToSetup" },
       },
     },

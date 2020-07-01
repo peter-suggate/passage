@@ -29,7 +29,6 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { Routes } from "@/router/Routes";
 import { map } from "rxjs/operators";
 import { audio$ } from "../lib/audio";
 
@@ -62,24 +61,15 @@ import { audio$ } from "../lib/audio";
 export default Vue.extend({
   name: "SetupAudio",
 
-  components: {
-    // Logo,
-  },
-
-  data: () => ({
-    Routes,
-  }),
-
   subscriptions: function(this) {
     return {
-      // pageScrollY$: pageScrollY$(1),
       status$: audio$.pipe(
         map((e) => {
           switch (e.value) {
             case "uninitialized":
             case "setupStart": {
               return {
-                title: "Configuring recording",
+                title: "Detecting microphone",
                 settingUp: true,
               };
             }
@@ -141,12 +131,6 @@ export default Vue.extend({
         })
       ),
     };
-  },
-
-  methods: {
-    cancel: function() {
-      // audioService.send("START");
-    },
   },
 });
 </script>

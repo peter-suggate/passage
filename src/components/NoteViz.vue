@@ -18,14 +18,17 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { mergeMap } from "rxjs/operators";
+import { mergeMap, shareReplay, map } from "rxjs/operators";
 import { audio$, audioService } from "@/lib/audio";
 import {
   ActiveNoteState,
-  NoteInfo
+  NoteInfo,
+  ActiveNoteContext,
 } from "../lib/audio/analysis/activeNoteService";
 import { AudioState } from "../lib/audio/audioService";
-import { of, Observable } from "rxjs";
+import { of, Observable, fromEventPattern } from "rxjs";
+import { useService } from "@xstate/vue";
+import { Interpreter } from "xstate";
 
 export default Vue.extend({
   name: "NoteViz",
@@ -57,30 +60,72 @@ export default Vue.extend({
 
   data() {
     return {
-      audioService
+      audioService,
     };
+  },
+
+  created() {
+    // const { state, interpreter } = useService(
+    //   audioService.children.get("running")
+    // );
+    // interpreter
+    //   .onTransition((state) => console.log("PRODUCT TRANSITION", state))
+    //   .onEvent((event) => console.log("PRODUCT EVENT", event));
   },
 
   subscriptions: function(this) {
     return {
       note$: audio$.pipe(
-        mergeMap<AudioState, Observable<NoteInfo | undefined>>(e => {
+        mergeMap<AudioState, Observable<NoteInfo | undefined>>((e) => {
           if (e.value === "running") {
             const service = audioService.children.get("running");
-
+            console.log("service", !!service);
             if (service) {
-              const state = service.state as ActiveNoteState;
-              switch (state.value) {
-                case "running":
-                  return state.context.note$!;
-              }
+              return (service as Interpreter<ActiveNoteContext>).state.context
+                .note$!;
+              // const {  } = useService((service as Interpreter<ActiveNoteContext>));
+
+              // return service$;
+              // return fromEventPattern<AudioState>(
+              //   (handler) => {
+              //     (service as Interpreter<ActiveNoteContext>)
+              //       // Listen for state transitions
+              //       .onTransition((state, _) => handler(state))
+              //       // Start the service
+              //       .start();
+              //     return service;
+              //   },
+              //   (_, service) => service.stop()
+              // )
+              //   .pipe(shareReplay(1))
+              //   .pipe(
+              //     map((state) => {
+              //       if (state.value === "running") {
+              //         return (state as ActiveNoteState).context.note$!;
+              //       }
+              //     })
+              //   );
+              // return Observable.create(service$);
+              // service$.subscribe((v: any) => {
+              //   console.log("listener service event:", v);
+              // });
+              // .onTransition((state: any) =>
+              //   console.log("Listener transition", state)
+              // )
+              // .onEvent((event: any) => console.log("Listener EVENT", event));
+
+              // const state = service.state as ActiveNoteState;
+              // switch (state.value) {
+              //   case "running":
+              //     return state.context.note$!;
+              // }
             }
           }
 
           return of(undefined);
         })
-      )
+      ),
     };
-  }
+  },
 });
 </script>

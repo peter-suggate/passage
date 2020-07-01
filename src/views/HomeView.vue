@@ -26,6 +26,7 @@ import {
   pageScrollY$,
   opacityFadeout,
   scrollKeepVisible,
+  PAGE_SIZE_FRAC,
 } from "@/transitions/page-transforms";
 import { map } from "rxjs/operators";
 
@@ -36,43 +37,9 @@ export default Vue.extend({
     Home,
   },
 
-  data: () => ({}),
-
   subscriptions: function(this) {
     const pageIndex = 0;
     return {
-      // contentStyle$: pageScrollY$(pageIndex).pipe(
-      //   map(({ scrollY, scrollYRelPage, scrollYRelPageFrac, pageHeight }) => {
-      //     const style = {
-      //       transform: "inherit",
-      //       willChange: "transform"
-      //     };
-
-      //     const offsetY: number = scrollKeepVisible(
-      //       fraction(0.3),
-      //       fraction(0.05)
-      //     )(scrollY, scrollYRelPage - scrollY, pageHeight);
-
-      //     const kBeginShrinkScrollFrac = 0.35;
-      //     if (scrollYRelPageFrac.value > kBeginShrinkScrollFrac) {
-      //       const offsetFrac =
-      //         (scrollYRelPageFrac.value - kBeginShrinkScrollFrac) /
-      //         (0.6 - kBeginShrinkScrollFrac);
-
-      //       //  scale(${Math.max(
-      //       //               0.5,
-      //       //               1.0 - 0.3 * offsetFrac
-      //       //             )})
-      //       const offsetXAtFullShrink = -20;
-      //       style.transform = `translate(${offsetFrac *
-      //         offsetXAtFullShrink}vw, ${offsetY}px)`;
-      //     } else {
-      //       style.transform = `translateY(${offsetY}px)`;
-      //     }
-
-      //     return style;
-      //   })
-      // ),
       contentStyle$: pageScrollY$(pageIndex).pipe(
         map(({ scrollY, pageTopY, pageHeight, scrollYRelPageFrac }) => {
           if (scrollYRelPageFrac > 0.3) {
@@ -99,8 +66,8 @@ export default Vue.extend({
           // Fully hidden at 10% scroll.
           opacity: opacityFadeout(scrollYRelPageFrac, fraction(0.1)),
 
-          // Position near bottom of page.
-          transform: offsetInPage(fraction(0.6)),
+          // Position near middle of page.
+          transform: offsetInPage(fraction(0.3)),
 
           willChange: "opacity",
         }))
@@ -111,6 +78,11 @@ export default Vue.extend({
   methods: {
     begin: function() {
       audioService.send("START");
+
+      window.scroll({
+        top: PAGE_SIZE_FRAC * window.innerHeight,
+        behavior: "smooth",
+      });
     },
   },
 });
