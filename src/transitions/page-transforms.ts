@@ -1,27 +1,31 @@
-import { AudioValidStates } from "@/lib/audio/audioService";
+import { AudioValidStates, AudioState } from "@/lib/audio/audioService";
 import HomeView from "@/views/HomeView.vue";
 import SetupView from "@/views/SetupView.vue";
+import ConfigureSynthView from "@/views/ConfigureSynthView.vue";
 import ListenView from "@/views/ListenView.vue";
 import { fromEvent } from "rxjs";
-import { withLatestFrom, map, startWith, tap } from "rxjs/operators";
+import { withLatestFrom, map, startWith } from "rxjs/operators";
 import { audio$ } from "@/lib/audio";
 import { easeOutSine, easeInQuart } from "./easings";
 
 export type PageComponents = {
   Home: typeof HomeView;
   Setup: typeof SetupView;
+  ConfigureSynthView: typeof ConfigureSynthView;
   Listen: typeof ListenView;
 };
 
 export const pageComponentsTuple = [
   ["Home", HomeView],
   ["Setup", SetupView],
+  ["ConfigureSynthView", ConfigureSynthView],
   ["Listen", ListenView],
 ];
 
 export const pageComponents = {
   Home: HomeView,
   Setup: SetupView,
+  ConfigureSynthView,
   Listen: ListenView,
 };
 
@@ -81,6 +85,21 @@ const opacityFadeinout = (pageVisibleFractionForFullOpacity = 0.3) => (
   return easeInQuart(opacity);
 };
 
+const opacityFadeoutAbove = (pageVisibleFractionForFullOpacity = 0.3) => (
+  scrollY: number,
+  pageTopY: number,
+  pageHeight: number
+) => {
+  const viewCenter = scrollY + 0.5 * pageHeight;
+  const pageCenter = pageTopY + 0.5 * pageHeight;
+
+  const distFromCenter = 2 * fraction((viewCenter - pageCenter) / pageHeight);
+
+  const opacity =
+    1 - Math.max(0, distFromCenter - pageVisibleFractionForFullOpacity);
+  return easeInQuart(opacity);
+};
+
 const pageConfig = (
   config: { component: keyof PageComponents } & Partial<PageConfig>
 ): PageConfig => ({
@@ -97,23 +116,53 @@ const homePage = pageConfig({
 const setupPage = pageConfig({
   component: "Setup",
   transform: scrollParallax,
-  opacity: opacityFadeinout(0.1),
+  opacity: opacityFadeoutAbove(0.0),
+});
+
+const setupSynthPage = pageConfig({
+  component: "ConfigureSynthView",
+  opacity: opacityFadeoutAbove(0.0),
 });
 
 const listenPage = pageConfig({
   component: "Listen",
 });
 
-export const appPageConfigs: Record<AudioValidStates, PageConfig[]> = {
-  uninitialized: [homePage, setupPage],
-  setupStart: [homePage, setupPage],
-  error: [homePage, setupPage],
-  resuming: [homePage, setupPage, listenPage],
-  running: [homePage, setupPage, listenPage],
-  suspended: [homePage, setupPage, listenPage],
+// export const appPageConfigs: Record<AudioValidStates, PageConfig[]> = {
+//   uninitialized: [homePage, setupPage],
+//   setupStart: [homePage, setupPage],
+//   setupSynthesizer: [homePage, setupPage, setupSynthPage],
+//   error: [homePage, setupPage],
+//   resuming: [homePage, setupPage, listenPage],
+//   running: [homePage, setupPage, listenPage],
+//   suspended: [homePage, setupPage, listenPage],
+// };
+
+export const appPageConfig = (state: AudioState): PageConfig[] => {
+  const { value, context } = state;
+
+  const base = [homePage, setupPage];
+
+  switch (value) {
+    case "uninitialized":
+    case "setupStart":
+      return base;
+  }
+
+  if (
+    context.synthConfig ||
+    value === "setupSynthesizer" ||
+    value === "error"
+  ) {
+    base.push(setupSynthPage);
+  }
+
+  base.push(listenPage);
+
+  return base;
 };
 
-export const PAGE_OVERLAP = fraction(0.1);
+export const PAGE_OVERLAP = fraction(0.05);
 export const PAGE_SIZE_FRAC = 1.0 - PAGE_OVERLAP;
 
 export const pageHeight = () => PAGE_SIZE_FRAC * window.innerHeight;
@@ -124,16 +173,25 @@ export const pageBottom = (pageIndex: number) =>
 export const pageStyles$ = () => {
   return fromEvent(window, "scroll").pipe(
     withLatestFrom(audio$),
-    map(([_, state]) => ({ scrollY: window.scrollY, state: state.value })),
-    startWith({ scrollY: window.scrollY, state: "uninitialized" }),
-    map(({ scrollY, state }) =>
-      appPageConfigs[state as AudioValidStates].map((page, index) => ({
-        height: `${100 * PAGE_SIZE_FRAC}vh`,
-        opacity: page.opacity(scrollY, pageTop(index), pageHeight()),
-        willChange: "opacity",
-        background:
-          index === 0 ? "blue" : index === 1 ? "transparent" : "green",
-      }))
+    map(([_, state]) => ({ scrollY: window.scrollY, state: state })),
+    startWith({
+      scrollY: window.scrollY,
+      state: { value: "uninitialized" } as AudioState,
+    }),
+    map(
+      ({ scrollY, state }) =>
+        appPageConfig(state).map((page, index) => ({
+          height: `${100 * PAGE_SIZE_FRAC}vh`,
+          opacity: page.opacity(scrollY, pageTop(index), pageHeight()),
+          willChange: "opacity",
+        }))
+      // appPageConfigs[state as AudioValidStates].map((page, index) => ({
+      //   height: `${100 * PAGE_SIZE_FRAC}vh`,
+      //   opacity: page.opacity(scrollY, pageTop(index), pageHeight()),
+      //   willChange: "opacity",
+      //   // background:
+      //   //   index === 0 ? "transparent" : index === 1 ? "transparent" : "green",
+      // }))
     )
   );
 };

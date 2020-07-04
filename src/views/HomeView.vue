@@ -1,5 +1,9 @@
 <template>
   <div class="home-view">
+    <img
+      src="/img/beethoven.svg"
+      style="opacity: 0.15; position: absolute; width: 100%; transform: translateY(5vh)"
+    />
     <v-row class="text-center">
       <v-col cols="12">
         <v-row justify="center">
@@ -26,7 +30,7 @@ import {
   pageScrollY$,
   opacityFadeout,
   scrollKeepVisible,
-  PAGE_SIZE_FRAC,
+  pageHeight,
 } from "@/transitions/page-transforms";
 import { map } from "rxjs/operators";
 
@@ -42,13 +46,13 @@ export default Vue.extend({
     return {
       contentStyle$: pageScrollY$(pageIndex).pipe(
         map(({ scrollY, pageTopY, pageHeight, scrollYRelPageFrac }) => {
-          if (scrollYRelPageFrac > 0.3) {
+          if (scrollYRelPageFrac > 0.4) {
             return {
               position: "fixed",
               top: pageHeight * 0.05,
             };
           } else {
-            const offsetY = scrollKeepVisible(fraction(0.3), fraction(0.05))(
+            const offsetY = scrollKeepVisible(fraction(0.4), fraction(0.05))(
               scrollY,
               pageTopY,
               pageHeight
@@ -67,7 +71,7 @@ export default Vue.extend({
           opacity: opacityFadeout(scrollYRelPageFrac, fraction(0.1)),
 
           // Position near middle of page.
-          transform: offsetInPage(fraction(0.3)),
+          transform: offsetInPage(fraction(0.6)),
 
           willChange: "opacity",
         }))
@@ -79,8 +83,8 @@ export default Vue.extend({
     begin: function() {
       audioService.send("START");
 
-      window.scroll({
-        top: PAGE_SIZE_FRAC * window.innerHeight,
+      window.scrollBy({
+        top: pageHeight(),
         behavior: "smooth",
       });
     },

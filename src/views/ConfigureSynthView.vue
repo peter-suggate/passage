@@ -1,12 +1,12 @@
 <template>
   <v-container fluid style="height: 100%">
     <v-row align="center" justify="center" style="height: 100%">
-      <v-col id="triggerSetup">
+      <v-col>
         <v-row>
-          <SetupAudio />
+          <ConfigureSynth />
         </v-row>
-        <v-row v-if="setupComplete$" align="center" justify="center">
-          <v-btn v-bind:style="buttonStyle$" v-on:click="listen" justify="center">Start</v-btn>
+        <v-row align="center" justify="center" id="triggerFinished">
+          <v-btn v-bind:style="buttonStyle$" v-on:click="listen" justify="center">Finished</v-btn>
         </v-row>
       </v-col>
     </v-row>
@@ -15,7 +15,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import SetupAudio from "@/components/SetupAudio.vue";
+import ConfigureSynth from "@/components/ConfigureSynth.vue";
 import { audioService, audio$ } from "../lib/audio";
 import {
   pageScrollY$,
@@ -26,10 +26,10 @@ import {
 import { map } from "rxjs/operators";
 
 export default Vue.extend({
-  name: "SetupView",
+  name: "ConfigureSynthView",
 
   components: {
-    SetupAudio
+    ConfigureSynth
   },
 
   data: () =>
@@ -53,7 +53,7 @@ export default Vue.extend({
       threshold: 0.5
     });
 
-    const target = document.querySelector("#triggerSetup");
+    const target = document.querySelector("#triggerFinished");
     if (target) this.observer.observe(target);
   },
 

@@ -17,7 +17,7 @@ export type Note =
   | "G"
   | "G#";
 
-const notes: Note[] = [
+export const notes: Note[] = [
   "C",
   "C#",
   "D",
@@ -42,6 +42,7 @@ export const frequencyToNearestNote = (
   hz: number,
   concertPitch = 440.0
 ): NearestNote => {
+  // console.log(hz);
   const nearestNote = Math.round(12 * Math.log2(hz / concertPitch));
   const noteAndOctave = 69 + nearestNote;
   const nearestNoteHz = concertPitch * Math.pow(2, nearestNote / 12);

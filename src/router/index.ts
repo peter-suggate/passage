@@ -1,7 +1,6 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import Home from "../views/HomeView.vue";
-// import Listen from "../views/ListenView.vue";
 import { Routes } from "./Routes";
 export * from "./redirects";
 
@@ -10,7 +9,7 @@ Vue.use(VueRouter);
 const routes: Array<RouteConfig> = [
   {
     path: Routes.Home,
-    name: "Home",
+    name: "HomeView",
     component: Home,
   },
   // {
@@ -24,12 +23,17 @@ const routes: Array<RouteConfig> = [
   // },
   {
     path: Routes.Setup,
-    name: "Setup",
+    name: "SetupView",
     component: () => import("../views/SetupView.vue"),
   },
   {
+    path: Routes.ConfigureSynth,
+    name: "ConfigureSynthView",
+    component: () => import("../views/ConfigureSynthView.vue"),
+  },
+  {
     path: Routes.Listen,
-    name: "Listen",
+    name: "ListenView",
     // component: Listen,
     component: () => import("../views/ListenView.vue"),
   },

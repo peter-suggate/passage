@@ -7,7 +7,7 @@
             <h1 class="display-4">{{ note$.value }}</h1>
             <h1 class="display-1">octave: {{ note$.octave }}</h1>
             <h1 class="display-1">cents: {{ Math.round(note$.cents) }}</h1>
-            <h1 class="display-2">clarity: {{ note$.clarity.toFixed(1) }}</h1>
+            <h1 class="display-2">clarity: {{ note$.clarity.toFixed(2) }}</h1>
             <h1 class="display-2">age: {{ note$.age }}</h1>
           </v-col>
         </v-row>
@@ -18,16 +18,14 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { mergeMap, shareReplay, map } from "rxjs/operators";
+import { mergeMap } from "rxjs/operators";
 import { audio$, audioService } from "@/lib/audio";
 import {
-  ActiveNoteState,
   NoteInfo,
-  ActiveNoteContext,
+  ActiveNoteContext
 } from "../lib/audio/analysis/activeNoteService";
 import { AudioState } from "../lib/audio/audioService";
-import { of, Observable, fromEventPattern } from "rxjs";
-import { useService } from "@xstate/vue";
+import { of, Observable } from "rxjs";
 import { Interpreter } from "xstate";
 
 export default Vue.extend({
@@ -60,7 +58,7 @@ export default Vue.extend({
 
   data() {
     return {
-      audioService,
+      audioService
     };
   },
 
@@ -76,7 +74,7 @@ export default Vue.extend({
   subscriptions: function(this) {
     return {
       note$: audio$.pipe(
-        mergeMap<AudioState, Observable<NoteInfo | undefined>>((e) => {
+        mergeMap<AudioState, Observable<NoteInfo | undefined>>(e => {
           if (e.value === "running") {
             const service = audioService.children.get("running");
             console.log("service", !!service);
@@ -124,8 +122,8 @@ export default Vue.extend({
 
           return of(undefined);
         })
-      ),
+      )
     };
-  },
+  }
 });
 </script>

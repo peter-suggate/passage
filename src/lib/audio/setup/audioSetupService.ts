@@ -36,10 +36,6 @@ export type AudioSetupState = {
   | { value: "analyzerError" }
 );
 
-const services = {};
-
-const actions = {};
-
 export const audioSetupMachine = createMachine<
   AudioSetupContext,
   Event,
@@ -75,14 +71,7 @@ export const audioSetupMachine = createMachine<
       },
 
       noAudioFound: {
-        // type: "final",
         entry: escalate("No audio recording device was found"),
-        // data: (context) => {
-        //   return {
-        //     message: context.message,
-        //   };
-        // },
-        // on: { DETECT: "detectingAudio" }
       },
 
       createAudioAnalyzer: {

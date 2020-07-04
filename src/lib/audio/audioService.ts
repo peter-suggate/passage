@@ -12,21 +12,31 @@ import {
   activeNoteMachine,
   ActiveNoteContext,
 } from "./analysis/activeNoteService";
+import { setupSynthesizerMachine } from "./synth";
 import { resumeAudio, suspendAudio } from "./setup/audioSetupEffects";
 import { AudioRecorderNode } from "./recorder/webaudio/AudioRecorderNode";
+import { AudioSynthNode } from "./recorder/synthaudio/AudioSynthNode";
 import { ANIM_CONSTANTS } from "@/transitions/constants";
+import { analyzerMachine } from "./analysis/analyzerService";
+import { SynthesizerConfig } from "./synth/synth-types";
 
 type Context = {
   audio?: AudioContext;
-  analyzer$?: AudioRecorderNode;
+  analyzer$?: AudioRecorderNode | AudioSynthNode;
   message?: string;
+  synthConfig?: SynthesizerConfig;
 };
 
-type Event = { type: "START" } | { type: "RESUME" } | { type: "STOP" };
+type Event =
+  | { type: "START" }
+  | { type: "RESUME" }
+  | { type: "STOP" }
+  | { type: "USE_SYNTH" };
 
 export type AudioValidStates =
   | "uninitialized"
   | "setupStart"
+  | "setupSynthesizer"
   | "running"
   | "resuming"
   | "error"
@@ -129,7 +139,25 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
       },
 
       error: {
-        // on: {},
+        on: { USE_SYNTH: "setupSynthesizer" },
+      },
+
+      setupSynthesizer: {
+        invoke: {
+          src: "setupSynthesizer",
+          onDone: {
+            target: "running",
+            actions: assign({
+              synthConfig: (_, e) => e.data,
+            }),
+          },
+          onError: {
+            target: "error",
+            actions: assign({
+              message: (_, e) => e.data,
+            }),
+          },
+        },
       },
 
       suspended: {
@@ -146,7 +174,8 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
       audioSetup: (context, event) => audioSetupMachine,
       resume: (context) => resumeAudio(context.audio!),
       suspend: (context) => suspendAudio(context.audio!),
-      analyzer: (context) => activeNoteMachine,
+      analyzer: (context) => analyzerMachine,
+      setupSynthesizer: (context) => setupSynthesizerMachine,
     },
   }
 );

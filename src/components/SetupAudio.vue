@@ -2,26 +2,12 @@
   <v-container>
     <v-row class="text-center" justify="center">
       <v-col cols="12" sm="12" md="4">
-        <!-- <v-sheet
-          :elevation="Math.round(15 * pageScrollY$.visiblePageFrac)"
-          style="background: transparent; padding: 20px"
-        > -->
         <v-icon style="font-size: 6rem;">mdi-microphone-outline</v-icon>
         <br />
         <h1 class="h1">{{ status$.title }}</h1>
-        <!-- <h2 class="h2">
-          {{
-            state.value === "setupStart"
-              ? "Setting up audio"
-              : "Audio recording not configured"
-          }}...
-        </h2> -->
-        <!-- <h2 v-if="status.message" class="h2">{{ status.message }}</h2> -->
         <br />
-        <v-btn v-if="status$.settingUp" v-on:click="send('CANCEL')"
-          >Cancel setup</v-btn
-        >
-        <!-- </v-sheet> -->
+        <v-btn v-if="status$.error" v-on:click="useSynthesizer">Generate audio</v-btn>
+        <v-btn v-if="status$.settingUp" v-on:click="send('CANCEL')">Cancel setup</v-btn>
       </v-col>
     </v-row>
   </v-container>
@@ -30,7 +16,8 @@
 <script lang="ts">
 import Vue from "vue";
 import { map } from "rxjs/operators";
-import { audio$ } from "../lib/audio";
+import { audio$, audioService } from "../lib/audio";
+import { pageHeight } from "../transitions/page-transforms";
 
 // export default {
 //   setup() {
@@ -61,26 +48,43 @@ import { audio$ } from "../lib/audio";
 export default Vue.extend({
   name: "SetupAudio",
 
+  methods: {
+    useSynthesizer: function() {
+      audioService.send("USE_SYNTH");
+
+      window.scrollBy({
+        top: pageHeight(),
+        behavior: "smooth"
+      });
+    }
+  },
+
   subscriptions: function(this) {
     return {
       status$: audio$.pipe(
-        map((e) => {
+        map(e => {
           switch (e.value) {
             case "uninitialized":
             case "setupStart": {
               return {
                 title: "Detecting microphone",
-                settingUp: true,
+                settingUp: true
               };
             }
             case "error":
-              return { title: `Error: ${e.context.message}`, settingUp: false };
+            case "setupSynthesizer":
+              return {
+                title: `${e.context.message}`,
+                error: true,
+                settingUp: false
+              };
             case "resuming":
             case "running":
             default: {
               return {
                 title: "Mic found",
-                settingUp: false,
+                error: false,
+                settingUp: false
               };
             }
           }
@@ -129,8 +133,8 @@ export default Vue.extend({
           //   settingUp: false
           // };
         })
-      ),
+      )
     };
-  },
+  }
 });
 </script>
