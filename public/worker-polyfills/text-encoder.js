@@ -235,7 +235,9 @@
 
     // return resultingString.replace(/[\xc0-\xff][\x80-\xbf]*/g, decoderReplacer);
   };
+  globalThis.TextDecoder = TextDecoder;
   if (!window["TextDecoder"]) window["TextDecoder"] = TextDecoder;
+
   //////////////////////////////////////////////////////////////////////////////////////
   function encoderReplacer(nonAsciiChars) {
     // make the UTF string into a binary UTF-8 encoded string
@@ -292,6 +294,7 @@
     return result;
   };
   if (!window["TextEncoder"]) window["TextEncoder"] = TextEncoder;
+  globalThis.TextEncoder = TextEncoder;
 })(
   typeof globalThis == "" + void 0
     ? typeof global == "" + void 0
