@@ -10,6 +10,10 @@ module.exports = {
             name: "js/[hash].worklet.js",
           },
         },
+        {
+          test: /music_analyzer_wasm_rs/,
+          loader: require.resolve("@open-wc/webpack-import-meta-loader"),
+        },
       ],
     },
   },
