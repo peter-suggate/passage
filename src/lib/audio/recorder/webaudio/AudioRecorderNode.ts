@@ -2,6 +2,7 @@ import { Subject } from "rxjs";
 import {
   AudioRecorderEventTypes,
   AudioProcessorEventTypes,
+  Suspendable,
 } from "../recorder-types";
 
 function scriptUrl(scriptPath: string) {
@@ -10,10 +11,19 @@ function scriptUrl(scriptPath: string) {
   return `${publicUrl}/${scriptPath}`;
 }
 
-export class AudioRecorderNode extends Subject<AudioRecorderEventTypes> {
+export class AudioRecorderNode extends Subject<AudioRecorderEventTypes>
+  implements Suspendable {
   audioWorkletNode: AudioWorkletNode;
 
-  private constructor(context: AudioContext, wasmBytes: ArrayBuffer) {
+  async suspend() {
+    await this.context.suspend();
+  }
+
+  async resume() {
+    await this.context.resume();
+  }
+
+  private constructor(private context: AudioContext, wasmBytes: ArrayBuffer) {
     super();
 
     this.audioWorkletNode = new globalThis.AudioWorkletNode(

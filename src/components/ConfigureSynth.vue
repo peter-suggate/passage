@@ -40,6 +40,11 @@ export default Vue.extend({
 
   methods: {
     listen: function() {
+      const setupService = audioService.children.get("setupSynthesizer");
+      if (setupService) {
+        setupService.send({ type: "FINISH" });
+      }
+
       audioService.send("RESUME");
 
       window.scrollBy({
@@ -69,7 +74,17 @@ export default Vue.extend({
                 error: true,
                 settingUp: false
               };
-            case "setupSynthesizer":
+            case "setupSynthesizer": {
+              const setupService = audioService.children.get(
+                "setupSynthesizer"
+              );
+              return {
+                title: "Configure synthesizer",
+                error: false,
+                setup: e.context,
+                setupService
+              };
+            }
             default: {
               return {
                 title: "Configure synthesizer",

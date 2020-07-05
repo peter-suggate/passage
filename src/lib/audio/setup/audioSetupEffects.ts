@@ -19,11 +19,3 @@ export const connectAnalyzer = (
 
   return node;
 };
-
-export const suspendAudio = async (context: AudioContext) => {
-  await context.suspend();
-};
-
-export const resumeAudio = async (context: AudioContext) => {
-  await context.resume();
-};

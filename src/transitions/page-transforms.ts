@@ -152,6 +152,7 @@ export const appPageConfig = (state: AudioState): PageConfig[] => {
   if (
     context.synthConfig ||
     value === "setupSynthesizer" ||
+    value === "noWebAudio" ||
     value === "error"
   ) {
     base.push(setupSynthPage);

@@ -19,3 +19,8 @@ export type AudioContextMin = Pick<
   AudioContext,
   "state" | "suspend" | "resume"
 >;
+
+export type Suspendable = {
+  suspend(): Promise<void>;
+  resume(): Promise<void>;
+};

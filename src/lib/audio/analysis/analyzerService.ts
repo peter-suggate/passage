@@ -10,7 +10,7 @@ export const analyzerMachine = Machine(
     type: "parallel",
     states: {
       record: {
-        initial: "idle",
+        initial: "recording",
         states: {
           recording: {
             on: {
@@ -23,7 +23,7 @@ export const analyzerMachine = Machine(
         },
       },
       analyze: {
-        initial: "idle",
+        initial: "running",
         states: {
           running: {
             on: {

@@ -1,4 +1,4 @@
-import { createMachine, assign, DoneInvokeEvent } from "xstate";
+import { createMachine, assign } from "xstate";
 import { escalate } from "xstate/lib/actions";
 import { SynthesizerConfig, defaultSynthConfig } from "./synth-types";
 import { AudioSynthNode } from "../recorder/synthaudio/AudioSynthNode";
@@ -6,6 +6,7 @@ import { AudioSynthNode } from "../recorder/synthaudio/AudioSynthNode";
 export type SynthSetupContext = {
   config: SynthesizerConfig;
   node?: AudioSynthNode;
+  message?: string;
 };
 
 type Event =
@@ -19,6 +20,7 @@ export type SynthSetupState = {
   | { value: "configure" }
   | { value: "startGenerator" }
   | { value: "success" }
+  | { value: "error" }
   | { value: "cancelled" }
 );
 
@@ -36,7 +38,7 @@ export const setupSynthesizerMachine = createMachine<
         on: {
           UPDATE_CONFIG: {
             actions: assign({
-              config: (_, e) => ({ ..._.config, ...e.config }),
+              config: (context, e) => ({ ...context.config, ...e.config }),
             }),
           },
           FINISH: "startGenerator",
@@ -49,6 +51,18 @@ export const setupSynthesizerMachine = createMachine<
           src: "createSynthAudio",
           onDone: {
             target: "success",
+            actions: [
+              assign({
+                // config: (context, e) => context.config,
+                node: (_, e) => e.data,
+              }),
+            ],
+          },
+          onError: {
+            target: "error",
+            actions: assign({
+              message: (_, e) => e.data.message,
+            }),
           },
         },
       },
@@ -57,9 +71,20 @@ export const setupSynthesizerMachine = createMachine<
         type: "final",
         data: (context) => {
           return {
+            config: context.config,
             node: context.node,
           };
         },
+      },
+
+      error: {
+        type: "final",
+        entry: (context) =>
+          escalate(
+            context.message
+              ? `Setup synthesizer failed with error: ${context.message}`
+              : "Synth setup failed"
+          ),
       },
 
       cancelled: {
@@ -70,7 +95,7 @@ export const setupSynthesizerMachine = createMachine<
   },
   {
     services: {
-      createSynthAudio: (context, event) => AudioSynthNode.create(),
+      createSynthAudio: (context) => AudioSynthNode.create(context.config),
     },
   }
 );

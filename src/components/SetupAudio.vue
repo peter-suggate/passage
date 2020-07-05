@@ -6,8 +6,12 @@
         <br />
         <h1 class="h1">{{ status$.title }}</h1>
         <br />
-        <v-btn v-if="status$.error" v-on:click="useSynthesizer">Generate audio</v-btn>
-        <v-btn v-if="status$.settingUp" v-on:click="send('CANCEL')">Cancel setup</v-btn>
+        <v-btn v-if="status$.error" v-on:click="useSynthesizer"
+          >Generate audio</v-btn
+        >
+        <v-btn v-if="status$.settingUp" v-on:click="send('CANCEL')"
+          >Cancel setup</v-btn
+        >
       </v-col>
     </v-row>
   </v-container>
@@ -54,29 +58,30 @@ export default Vue.extend({
 
       window.scrollBy({
         top: pageHeight(),
-        behavior: "smooth"
+        behavior: "smooth",
       });
-    }
+    },
   },
 
   subscriptions: function(this) {
     return {
       status$: audio$.pipe(
-        map(e => {
+        map((e) => {
           switch (e.value) {
             case "uninitialized":
             case "setupStart": {
               return {
                 title: "Detecting microphone",
-                settingUp: true
+                settingUp: true,
               };
             }
+            case "noWebAudio":
             case "error":
             case "setupSynthesizer":
               return {
                 title: `${e.context.message}`,
                 error: true,
-                settingUp: false
+                settingUp: false,
               };
             case "resuming":
             case "running":
@@ -84,7 +89,7 @@ export default Vue.extend({
               return {
                 title: "Mic found",
                 error: false,
-                settingUp: false
+                settingUp: false,
               };
             }
           }
@@ -133,8 +138,8 @@ export default Vue.extend({
           //   settingUp: false
           // };
         })
-      )
+      ),
     };
-  }
+  },
 });
 </script>

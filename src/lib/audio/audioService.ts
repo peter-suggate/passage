@@ -13,14 +13,14 @@ import {
   ActiveNoteContext,
 } from "./analysis/activeNoteService";
 import { setupSynthesizerMachine } from "./synth";
-import { resumeAudio, suspendAudio } from "./setup/audioSetupEffects";
+import { resumeAudio, suspendAudio } from "./audioEffects";
 import { AudioRecorderNode } from "./recorder/webaudio/AudioRecorderNode";
 import { AudioSynthNode } from "./recorder/synthaudio/AudioSynthNode";
 import { ANIM_CONSTANTS } from "@/transitions/constants";
 import { analyzerMachine } from "./analysis/analyzerService";
 import { SynthesizerConfig } from "./synth/synth-types";
 
-type Context = {
+export type AudioServiceContext = {
   audio?: AudioContext;
   analyzer$?: AudioRecorderNode | AudioSynthNode;
   message?: string;
@@ -36,15 +36,22 @@ type Event =
 export type AudioValidStates =
   | "uninitialized"
   | "setupStart"
+  | "noWebAudio"
   | "setupSynthesizer"
   | "running"
   | "resuming"
   | "error"
   | "suspended";
 
-export type AudioState = { context: Context } & { value: AudioValidStates };
+export type AudioState = { context: AudioServiceContext } & {
+  value: AudioValidStates;
+};
 
-export const audioMachine = createMachine<Context, Event, AudioState>(
+export const audioMachine = createMachine<
+  AudioServiceContext,
+  Event,
+  AudioState
+>(
   {
     id: "Audio",
     initial: "uninitialized",
@@ -57,26 +64,27 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
       uninitialized: {
         on: {
           START: "setupStart",
+          USE_SYNTH: "setupSynthesizer",
         },
       },
 
       // Perform audio setup using the audioSetup child service.
       setupStart: {
         invoke: {
-          id: "audio-setup",
           src: "audioSetup",
           onDone: {
             target: "suspended",
-            actions: assign<Context, DoneInvokeEvent<AudioSetupContext>>(
-              (_, e) => ({
-                message: e.data.message,
-                audio: e.data.audio,
-                analyzer$: e.data.node,
-              })
-            ),
+            actions: assign<
+              AudioServiceContext,
+              DoneInvokeEvent<AudioSetupContext>
+            >((_, e) => ({
+              message: e.data.message,
+              audio: e.data.audio,
+              analyzer$: e.data.node,
+            })),
           },
           onError: {
-            target: "error",
+            target: "noWebAudio",
             actions: assign((_, e) => ({
               message: e.data,
             })),
@@ -92,7 +100,7 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
           },
           onError: {
             target: "error",
-            actions: assign<Context, any>({
+            actions: assign<AudioServiceContext, any>({
               message: (_, e) => e.data,
             }),
           },
@@ -104,7 +112,7 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
         invoke: {
           id: "running",
           src: "analyzer",
-          data: (context: Context) =>
+          data: (context: AudioServiceContext) =>
             ({
               analyzerEvents$: context.analyzer$,
               note: undefined,
@@ -131,31 +139,40 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
           },
           onError: {
             target: "error",
-            actions: assign<Context, any>({
+            actions: assign<AudioServiceContext, any>({
               message: (_, e) => e.data,
             }),
           },
         },
       },
 
-      error: {
+      noWebAudio: {
         on: { USE_SYNTH: "setupSynthesizer" },
       },
+
+      error: {},
 
       setupSynthesizer: {
         invoke: {
           src: "setupSynthesizer",
           onDone: {
             target: "running",
-            actions: assign({
-              synthConfig: (_, e) => e.data,
-            }),
+            actions: [
+              assign({
+                synthConfig: (_, e) => e.data.config,
+                analyzer$: (_, e) => e.data.node,
+              }),
+              // (_, e) => console.log("setupSynthesizer completed", _, e),
+            ],
           },
           onError: {
             target: "error",
-            actions: assign({
-              message: (_, e) => e.data,
-            }),
+            actions: [
+              assign({
+                message: (_, e) => e.data,
+              }),
+              // (_, e) => console.log("setupSynthesizer error", _, e),
+            ],
           },
         },
       },
@@ -172,8 +189,8 @@ export const audioMachine = createMachine<Context, Event, AudioState>(
     },
     services: {
       audioSetup: (context, event) => audioSetupMachine,
-      resume: (context) => resumeAudio(context.audio!),
-      suspend: (context) => suspendAudio(context.audio!),
+      resume: (context) => resumeAudio(context.analyzer$!),
+      suspend: (context) => suspendAudio(context.analyzer$!),
       analyzer: (context) => analyzerMachine,
       setupSynthesizer: (context) => setupSynthesizerMachine,
     },

@@ -2,38 +2,52 @@ import { Subject } from "rxjs";
 import {
   AudioRecorderEventTypes,
   AudioProcessorEventTypes,
+  Suspendable,
 } from "../recorder-types";
 import init, {
   AudioSamplesProcessor,
   PitchDetector,
-} from "../../../../../public/music-analyzer-wasm-rs/music_analyzer_wasm_rs.js";
-/* eslint-disable @typescript-eslint/no-var-requires */
-// const asd = require("../../../../../public/worker-polyfills/text-encoder");
-// const wasm = require("../../../../../public/music-analyzer-wasm-rs/music_analyzer_wasm_rs");
-// var init, { AudioSamplesProcessor, PitchDetector } = require("../../../../../public/music-analyzer-wasm-rs/music_analyzer_wasm_rs");
-// import init, {
-//   PitchDetector,
-//   AudioSamplesProcessor,
-// } from "music-analyzer-wasm-rs/music_analyzer_wasm_rs";
+} from "../../../../../public/music-analyzer-wasm-rs/music_analyzer_wasm_rs";
+import { SynthesizerConfig } from "../../synth/synth-types";
 
-export class AudioSynthNode extends Subject<AudioRecorderEventTypes> {
+function isTest() {
+  return process.env.JEST_WORKER_ID !== undefined;
+}
+
+export class AudioSynthNode extends Subject<AudioRecorderEventTypes>
+  implements Suspendable {
   private constructor(
-    private wasmSamplesProcessor: any /*AudioSamplesProcessor*/,
-    private pitchDetector: any /*PitchDetector*/
+    private readonly config: SynthesizerConfig,
+    private readonly wasmSamplesProcessor: AudioSamplesProcessor,
+    private readonly pitchDetector: PitchDetector
   ) {
     super();
+
+    this.next({
+      type: "onset",
+      t: 0,
+    });
+
+    // this.next({
+    //   type: "pitch",
+    //   pitch,
+    // });
   }
 
-  private async loadWasm(wasmBytes: ArrayBuffer) {
-    await init(WebAssembly.compile(wasmBytes));
+  async suspend() {
+    // await this.context.suspend();
   }
 
-  static async create() {
+  async resume() {
+    // await this.context.resume();
+    console.log("audioSynthNode resume called");
+  }
+
+  static async create(config: SynthesizerConfig) {
     try {
-      console.log("synthesizer: loading wasm");
+      const wasmBytes = await AudioSynthNode.fetchMusicAnalyzerWasm();
 
-      // const wasmBytes = await AudioSynthNode.fetchMusicAnalyzerWasm();
-      // const wasm = await init(WebAssembly.compile(wasmBytes));
+      await init(WebAssembly.compile(wasmBytes));
 
       const wasmSamplesProcessor = AudioSamplesProcessor.new();
 
@@ -46,45 +60,28 @@ export class AudioSynthNode extends Subject<AudioRecorderEventTypes> {
         throw Error("Wasm pitch detector could not be created");
       }
 
-      return new AudioSynthNode(wasmSamplesProcessor, pitchDetector);
+      return new AudioSynthNode(config, wasmSamplesProcessor, pitchDetector);
     } catch (e) {
+      console.warn(e);
       throw new Error(
         `Failed to load audio analyzer WASM module. Further info: ${e.message}`
       );
     }
   }
 
-  // private static async fetchMusicAnalyzerWasm() {
-  //   const res = await globalThis.fetch(
-  //     scriptUrl("music-analyzer-wasm-rs/music_analyzer_wasm_rs_bg.wasm")
-  //   );
-  //   return res.arrayBuffer();
-  // }
+  private static scriptUrl(scriptPath: string) {
+    const publicUrl = isTest() ? "./public" : window.location.href;
 
-  onmessage(eventData: AudioProcessorEventTypes) {
-    switch (eventData.type) {
-      case "initialized": {
-        break;
-      }
-      case "pitches": {
-        eventData.result.forEach((pitch) => {
-          if (pitch.is_onset) {
-            this.next({
-              type: "onset",
-              t: pitch.t,
-            });
-          }
+    return `${publicUrl}/${scriptPath}`;
+  }
 
-          this.next({
-            type: "pitch",
-            pitch,
-          });
-        });
+  private static async fetchMusicAnalyzerWasm() {
+    const res = await globalThis.fetch(
+      AudioSynthNode.scriptUrl(
+        "music-analyzer-wasm-rs/music_analyzer_wasm_rs_bg.wasm"
+      )
+    );
 
-        break;
-      }
-      default:
-        break;
-    }
+    return res.arrayBuffer();
   }
 }
