@@ -1,3 +1,83 @@
+import { interpret } from "xstate";
+import { audioSetupMachine, AudioSetupContext } from "../audioSetupService";
+
+function testMachine(optionsIn?: typeof audioSetupMachine.options.services) {
+  const options = {
+    // initBrowserAudio: (context: AudioSetupContext) => audioSetupMachine,
+    ...optionsIn,
+  };
+
+  return audioSetupMachine.withConfig({
+    services: options,
+  });
+}
+
+it("is initially in detecting audio state", () => {
+  const machine = testMachine();
+
+  expect(machine.initialState.matches("detectingAudio"));
+});
+
+test("when setting up audio fails, transitions to no web audio", async (done) => {
+  const machine = testMachine({
+    initBrowserAudio: async () => {
+      throw Error("no mic available");
+    },
+  });
+
+  interpret(machine)
+    .onTransition((state) => {
+      if (state.matches("noAudioFound")) {
+        done();
+      }
+    })
+    .start();
+
+  // service.send({ type: "START" });
+});
+
+// it("enters setup synthesizer when using synthesizer", () => {
+//   const machine = testMachine();
+
+//   expect(machine.transition(machine.initialState, "USE_SYNTH").value).toBe(
+//     "setupSynthesizer"
+//   );
+// });
+
+// test("when setting up the synthesizer fails, transitions to error", async (done) => {
+//   const machine = testMachine({
+//     setupSynthesizer: async () => {
+//       throw Error("Setup synth failed");
+//     },
+//   });
+
+//   const service = interpret(machine)
+//     .onTransition((state) => {
+//       if (state.matches("error")) {
+//         done();
+//       }
+//     })
+//     .start();
+
+//   service.send({ type: "USE_SYNTH" });
+// });
+
+// test("when setting up the synthesizer succeeds, transitions to resuming", async (done) => {
+//   const machine = testMachine();
+
+//   const service = interpret(machine)
+//     .onTransition((state) => {
+//       if (state.matches("resuming")) {
+//         done();
+//       }
+//     })
+//     .start();
+
+//   service.send({ type: "USE_SYNTH" });
+
+//   service.children.get("setupSynthesizer")!.send({ type: "FINISH" });
+// });
+
 // import { createModel } from "@xstate/test";
 // import {
 //   makeAudioSetupService,

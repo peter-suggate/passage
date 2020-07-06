@@ -72,12 +72,12 @@ test("when setting up the synthesizer fails, transitions to error", async (done)
   service.send({ type: "USE_SYNTH" });
 });
 
-test("when setting up the synthesizer succeeds, transitions to running", async (done) => {
+test("when setting up the synthesizer succeeds, transitions to resuming", async (done) => {
   const machine = testMachine();
 
   const service = interpret(machine)
     .onTransition((state) => {
-      if (state.matches("running")) {
+      if (state.matches("resuming")) {
         done();
       }
     })

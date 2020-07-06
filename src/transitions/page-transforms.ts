@@ -7,6 +7,7 @@ import { fromEvent } from "rxjs";
 import { withLatestFrom, map, startWith } from "rxjs/operators";
 import { audio$ } from "@/lib/audio";
 import { easeOutSine, easeInQuart } from "./easings";
+import { Opaque } from "@/lib/fp-util/opaque";
 
 export type PageComponents = {
   Home: typeof HomeView;
@@ -41,7 +42,6 @@ const scrollParallax = (
   pageHeight: number
 ) => `translateY(${scrollY / 2}px)`;
 
-type Opaque<K, T> = T & { __TYPE__: K };
 type Fraction = Opaque<"Fraction", number>;
 
 export const fraction = (value: number): Fraction => value as Fraction;

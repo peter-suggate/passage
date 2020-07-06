@@ -6,12 +6,11 @@
         <br />
         <h1 class="h1">{{ status$.title }}</h1>
         <br />
-        <v-btn v-if="status$.error" v-on:click="useSynthesizer"
-          >Generate audio</v-btn
-        >
-        <v-btn v-if="status$.settingUp" v-on:click="send('CANCEL')"
-          >Cancel setup</v-btn
-        >
+        <v-row>
+          <v-btn v-if="status$.error" v-on:click="useSynthesizer">Generate audio</v-btn>
+        </v-row>
+        <v-btn v-if="!status$.settingUp" v-on:click="retry">Cancel setup</v-btn>
+        <v-btn v-if="status$.settingUp" v-on:click="cancel">Cancel setup</v-btn>
       </v-col>
     </v-row>
   </v-container>
@@ -19,127 +18,166 @@
 
 <script lang="ts">
 import Vue from "vue";
+import { useService } from "@xstate/vue";
 import { map } from "rxjs/operators";
 import { audio$, audioService } from "../lib/audio";
 import { pageHeight } from "../transitions/page-transforms";
+import { AudioSetupService, AudioSetupState } from "../lib/audio/setup";
 
-// export default {
-//   setup() {
-//     // const status = reactive({
-//     //     title: ''
-//     //   // count: 0,
-//     //   // double: computed(() => state.count * 2)
-//     // })
-
-//     // audioService.onTransition(state => {
-//     //   if (state.value === 'setupStart') {
-//     //     const audioSetupService = audioService.children.get("audio-setup")!;
-
-//     //     audioService.state.context.analyzer$
-//     //     // status.title =
-//     //   }
-//     // })
-
-//     const { state, send } = useService(audioService);
-
-//     return {
-//       state,
-//       send,
-//     };
-//   },
-// };
-
-export default Vue.extend({
-  name: "SetupAudio",
-
-  methods: {
-    useSynthesizer: function() {
-      audioService.send("USE_SYNTH");
-
-      window.scrollBy({
-        top: pageHeight(),
-        behavior: "smooth",
-      });
-    },
+export default {
+  props: {
+    audioSetupService: Object
   },
 
-  subscriptions: function(this) {
+  setup(props) {
+    // const status = reactive({
+    //     title: ''
+    //   // count: 0,
+    //   // double: computed(() => state.count * 2)
+    // })
+
+    // audioService.onTransition(state => {
+    //   if (state.value === 'setupStart') {
+    //     const audioSetupService = audioService.children.get("audio-setup")!;
+
+    //     audioService.state.context.analyzer$
+    //     // status.title =
+    //   }
+    // })
+
+    const { state, send } = useService(
+      props.audioSetupService as AudioSetupService
+    );
+
     return {
-      status$: audio$.pipe(
-        map((e) => {
-          switch (e.value) {
-            case "uninitialized":
-            case "setupStart": {
-              return {
-                title: "Detecting microphone",
-                settingUp: true,
-              };
-            }
-            case "noWebAudio":
-            case "error":
-            case "setupSynthesizer":
-              return {
-                title: `${e.context.message}`,
-                error: true,
-                settingUp: false,
-              };
-            case "resuming":
-            case "running":
-            default: {
-              return {
-                title: "Mic found",
-                error: false,
-                settingUp: false,
-              };
-            }
-          }
-          // if (e.value === "uninitialized") {
-          //   return {
-          //     title: "Not setup",
-          //     message: "keep scrolling down..",
-          //   };
-          // } else if (e.value === "setupStart") {
-          //   return {};
-          //   // const setupService = audioService.children.get("audio-setup");
-
-          //   // if (setupService) {
-          //   //   const setupState = setupService.state;
-
-          //   //   switch (setupState.value) {
-          //   //     case "detectingAudio":
-          //   //       return {
-          //   //         title: "Starting",
-          //   //         message: "Detecting microphone...",
-          //   //       };
-          //   //     case "createAudioAnalyzer":
-          //   //       return {
-          //   //         title: "Starting",
-          //   //         message: "Loading analyzers...",
-          //   //       };
-          //   //     case "noAudioFound":
-          //   //       return { title: "No microphone found" };
-          //   //     case "analyzerError":
-          //   //       return {
-          //   //         title: "Couldn't complete audio setup",
-          //   //         message: setupState.context.message,
-          //   //       };
-          //   //     default:
-          //   //       return {
-          //   //         title: e.value,
-          //   //         message: setupState.context.message,
-          //   //       };
-          //   //   }
-          //   // }
-          // }
-
-          // return {
-          //   title: "Setup complete",
-          //   message: "Keep scrolling down..",
-          //   settingUp: false
-          // };
-        })
-      ),
+      state,
+      send
     };
-  },
-});
+  }
+};
+
+// export default Vue.extend({
+//   name: "SetupAudio",
+
+//   methods: {
+//     useSynthesizer: function() {
+//       audioService.send("USE_SYNTH");
+
+//       window.scrollBy({
+//         top: pageHeight(),
+//         behavior: "smooth"
+//       });
+//     },
+
+//     retry: function() {
+//       this.audioSetupService.send("RETRY");
+//     },
+
+//     cancel: function() {
+//       this.audioSetupService.send("CANCEL");
+//     }
+//   },
+
+//   props: {
+//     audioSetupService: Object
+//   },
+
+//   data: function() {
+//     return {
+//       setupState: { value: "detectingAudio" }
+//     } as { setupState: AudioSetupState };
+//   },
+
+//   created: function() {
+//     (this.audioSetupService as AudioSetupService).onTransition(state => {
+//       this.setupState = state as AudioSetupState;
+//       // switch (state.value) {
+//       //   case "noAudioFound":
+//       //     break;
+//       //   default:
+//       //     break;
+//       // }
+//       // this.activePages = appPageConfig(state as AudioState);
+//     });
+//   },
+
+//   subscriptions: function() {
+//     return {
+//       status$: audio$.pipe(
+//         map(e => {
+//           switch (e.value) {
+//             case "uninitialized":
+//             case "setupStart": {
+//               return {
+//                 title: "Detecting microphone",
+//                 settingUp: true
+//               };
+//             }
+//             case "noWebAudio":
+//             case "error":
+//             case "setupSynthesizer":
+//               return {
+//                 title: `${e.context.message}`,
+//                 error: true,
+//                 settingUp: false
+//               };
+//             case "resuming":
+//             case "running":
+//             default: {
+//               return {
+//                 title: "Mic found",
+//                 error: false,
+//                 settingUp: false
+//               };
+//             }
+//           }
+//           // if (e.value === "uninitialized") {
+//           //   return {
+//           //     title: "Not setup",
+//           //     message: "keep scrolling down..",
+//           //   };
+//           // } else if (e.value === "setupStart") {
+//           //   return {};
+//           //   // const setupService = audioService.children.get("audio-setup");
+
+//           //   // if (setupService) {
+//           //   //   const setupState = setupService.state;
+
+//           //   //   switch (setupState.value) {
+//           //   //     case "detectingAudio":
+//           //   //       return {
+//           //   //         title: "Starting",
+//           //   //         message: "Detecting microphone...",
+//           //   //       };
+//           //   //     case "createAudioAnalyzer":
+//           //   //       return {
+//           //   //         title: "Starting",
+//           //   //         message: "Loading analyzers...",
+//           //   //       };
+//           //   //     case "noAudioFound":
+//           //   //       return { title: "No microphone found" };
+//           //   //     case "analyzerError":
+//           //   //       return {
+//           //   //         title: "Couldn't complete audio setup",
+//           //   //         message: setupState.context.message,
+//           //   //       };
+//           //   //     default:
+//           //   //       return {
+//           //   //         title: e.value,
+//           //   //         message: setupState.context.message,
+//           //   //       };
+//           //   //   }
+//           //   // }
+//           // }
+
+//           // return {
+//           //   title: "Setup complete",
+//           //   message: "Keep scrolling down..",
+//           //   settingUp: false
+//           // };
+//         })
+//       )
+//     };
+//   }
+// });
 </script>

@@ -21,18 +21,16 @@ export type AudioSetupContext = WebAudio & {
   message?: string;
 };
 
-type Event =
-  // | { type: "DETECT" }
-  { type: "SUSPEND" } | { type: "RESUME" } | { type: "CANCEL" };
+type Event = { type: "RETRY" } | { type: "CANCEL" };
 
 export type AudioSetupState = {
   context: AudioSetupContext;
-} & ( // | { value: "uninitialized" }
+} & (
   | { value: "detectingAudio" }
   | { value: "audioFound" }
   | { value: "noAudioFound" }
   | { value: "createAudioAnalyzer" }
-  | { value: "analyzerSuspended" }
+  | { value: "analyzerCreated" }
   | { value: "analyzerError" }
 );
 
@@ -46,16 +44,9 @@ export const audioSetupMachine = createMachine<
     initial: "detectingAudio",
     context: {},
     states: {
-      // uninitialized: {
-      //   on: {
-      //     DETECT: "detectingAudio",
-      //   },
-      // },
-
       detectingAudio: {
         invoke: {
-          src: "detectWebAudio",
-          // onEntry: [sendParent("SETUP.DETECTING_AUDIO")],
+          src: "initBrowserAudio",
           onDone: {
             target: "createAudioAnalyzer",
             actions: assign((_context, event) => event.data),
@@ -71,14 +62,18 @@ export const audioSetupMachine = createMachine<
       },
 
       noAudioFound: {
-        entry: escalate("No audio recording device was found"),
+        on: {
+          RETRY: "detectingAudio",
+        },
+        // type: "final",
+        // entry: escalate("No audio recording device was found"),
       },
 
       createAudioAnalyzer: {
         invoke: {
           src: "createAnalyzer",
           onDone: {
-            target: "analyzerSuspended",
+            target: "analyzerCreated",
             actions: assign((context, event) => ({
               ...context,
               node: event.data,
@@ -96,7 +91,7 @@ export const audioSetupMachine = createMachine<
         },
       },
 
-      analyzerSuspended: {
+      analyzerCreated: {
         type: "final",
         data: (context) => {
           return {
@@ -108,13 +103,18 @@ export const audioSetupMachine = createMachine<
 
       analyzerError: {
         type: "final",
+        data: (context) => {
+          return {
+            message: context.message,
+          };
+        },
         // on: { DETECT: "createAudioAnalyzer" },
       },
     },
   },
   {
     services: {
-      detectWebAudio: async () => {
+      initBrowserAudio: async () => {
         const media = await getWebAudioMediaStream();
 
         const audio = new globalThis.AudioContext();

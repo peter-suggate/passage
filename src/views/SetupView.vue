@@ -3,7 +3,8 @@
     <v-row align="center" justify="center" style="height: 100%">
       <v-col id="triggerSetup">
         <v-row>
-          <SetupAudio />
+          <SetupStatus v-if="!setupService$" />
+          <SetupAudio v-if="setupService$" :audioSetupService="setupService$" />
         </v-row>
         <v-row v-if="setupComplete$" align="center" justify="center">
           <v-btn v-bind:style="buttonStyle$" v-on:click="listen" justify="center">Start</v-btn>
@@ -16,6 +17,7 @@
 <script lang="ts">
 import Vue from "vue";
 import SetupAudio from "@/components/SetupAudio.vue";
+import SetupStatus from "@/components/SetupStatus.vue";
 import { audioService, audio$ } from "../lib/audio";
 import {
   pageScrollY$,
@@ -29,7 +31,8 @@ export default Vue.extend({
   name: "SetupView",
 
   components: {
-    SetupAudio
+    SetupAudio,
+    SetupStatus
   },
 
   data: () =>
@@ -60,6 +63,13 @@ export default Vue.extend({
   subscriptions: function(this) {
     const pageIndex = 1;
     return {
+      setupService$: audio$.pipe(
+        map(e =>
+          e.value === "setupStart"
+            ? audioService.children.get("audioSetup")
+            : undefined
+        )
+      ),
       setupComplete$: audio$.pipe(
         map(e => e.value === "suspended" || e.value === "running")
       ),
