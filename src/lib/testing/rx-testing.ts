@@ -2,17 +2,23 @@ import { Observable } from "rxjs";
 
 export const expectEvents$ = <T>(
   source$: Observable<T>,
-  expected: T[],
+  expected: Partial<T>[] | T[],
   done: jest.DoneCallback,
   filter: (e: T) => boolean = () => true
 ) => {
+  if (expected.length === 0) {
+    throw Error(
+      "expectEvents$() requires one or more expected events but received an empty array."
+    );
+  }
+
   const events: T[] = [];
 
   source$.subscribe(
     (event) => {
       if (!filter(event)) return;
 
-      expect(event).toEqual(expected[events.length]);
+      expect(event).toMatchObject(expected[events.length]);
 
       events.push(event);
 

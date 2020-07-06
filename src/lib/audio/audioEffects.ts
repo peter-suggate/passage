@@ -1,9 +1,9 @@
 import { Suspendable } from "./recorder";
 
-export const suspendAudio = async (context: Suspendable) => {
-  await context.suspend();
+export const suspendAudio = async (suspendable: Suspendable) => {
+  return await suspendable.suspend();
 };
 
-export const resumeAudio = async (context: Suspendable) => {
-  await context.resume();
+export const resumeAudio = async (suspendable: Suspendable) => {
+  return await suspendable.resume();
 };

@@ -15,14 +15,14 @@ import {
 import { setupSynthesizerMachine } from "./synth";
 import { resumeAudio, suspendAudio } from "./audioEffects";
 import { AudioRecorderNode } from "./recorder/webaudio/AudioRecorderNode";
-import { AudioSynthNode } from "./recorder/synthaudio/AudioSynthNode";
+import { AudioSynthesizer } from "./recorder/synthaudio/AudioSynthesizer";
 import { ANIM_CONSTANTS } from "@/transitions/constants";
 import { analyzerMachine } from "./analysis/analyzerService";
 import { SynthesizerConfig } from "./synth/synth-types";
 
 export type AudioServiceContext = {
   audio?: AudioContext;
-  analyzer$?: AudioRecorderNode | AudioSynthNode;
+  analyzer$?: AudioRecorderNode | AudioSynthesizer;
   message?: string;
   synthConfig?: SynthesizerConfig;
 };
@@ -156,7 +156,7 @@ export const audioMachine = createMachine<
         invoke: {
           src: "setupSynthesizer",
           onDone: {
-            target: "running",
+            target: "resuming",
             actions: [
               assign({
                 synthConfig: (_, e) => e.data.config,
@@ -191,7 +191,7 @@ export const audioMachine = createMachine<
       audioSetup: (context, event) => audioSetupMachine,
       resume: (context) => resumeAudio(context.analyzer$!),
       suspend: (context) => suspendAudio(context.analyzer$!),
-      analyzer: (context) => analyzerMachine,
+      analyzer: (context) => activeNoteMachine,
       setupSynthesizer: (context) => setupSynthesizerMachine,
     },
   }

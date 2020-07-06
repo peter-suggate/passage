@@ -1,16 +1,16 @@
 import { setupSynthesizerMachine } from "../setupSynthesizerMachine";
-import { AudioSynthNode } from "../../recorder/synthaudio/AudioSynthNode";
+import { AudioSynthesizer } from "../../recorder/synthaudio/AudioSynthesizer";
 import { interpret } from "xstate";
 
 function testMachine(optionsIn?: { createSynthAudio: () => Promise<void> }) {
   const options = {
-    createSynthAudio: AudioSynthNode.create,
+    createSynthAudio: AudioSynthesizer.create,
     ...optionsIn,
   };
 
   return setupSynthesizerMachine.withConfig({
     services: {
-      createSynthAudio: (context, event) => options.createSynthAudio(),
+      createSynthAudio: (context) => options.createSynthAudio(context.config),
     },
   });
 }

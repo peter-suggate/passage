@@ -1,11 +1,11 @@
 import { createMachine, assign } from "xstate";
 import { escalate } from "xstate/lib/actions";
 import { SynthesizerConfig, defaultSynthConfig } from "./synth-types";
-import { AudioSynthNode } from "../recorder/synthaudio/AudioSynthNode";
+import { AudioSynthesizer } from "../recorder/synthaudio/AudioSynthesizer";
 
 export type SynthSetupContext = {
   config: SynthesizerConfig;
-  node?: AudioSynthNode;
+  node?: AudioSynthesizer;
   message?: string;
 };
 
@@ -95,7 +95,7 @@ export const setupSynthesizerMachine = createMachine<
   },
   {
     services: {
-      createSynthAudio: (context) => AudioSynthNode.create(context.config),
+      createSynthAudio: (context) => AudioSynthesizer.create(context.config),
     },
   }
 );

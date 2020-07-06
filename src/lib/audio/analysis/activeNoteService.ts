@@ -7,6 +7,7 @@ import { frequencyToNearestNote, Note } from "./nearestNote";
 import { Pitch } from "music-analyzer-wasm-rs";
 import { cast } from "@/lib/testing/partial-impl";
 import { AudioRecorderEventTypes } from "../recorder";
+import { AudioSynthesizer } from "../recorder/synthaudio/AudioSynthesizer";
 
 export type NoteInfo = {
   value: Note;
@@ -15,7 +16,7 @@ export type NoteInfo = {
 };
 
 export type ActiveNoteContext = {
-  analyzerEvents$?: AudioRecorderNode;
+  analyzerEvents$?: AudioRecorderNode | AudioSynthesizer;
   note$?: Observable<NoteInfo>;
 };
 
