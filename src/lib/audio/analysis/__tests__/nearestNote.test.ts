@@ -13,10 +13,9 @@ function pitchEvent(frequency: number = 440): AudioPitchEvent {
     type: "pitch",
     pitch: {
       clarity: 0.95,
-      is_onset: false,
+      onset: false,
       frequency,
       t: 0,
-      free: jest.fn(),
     },
   };
 }
@@ -26,10 +25,9 @@ const pitchEvents = (frequencies: number[]): AudioPitchEvent[] =>
     type: "pitch",
     pitch: {
       clarity: 0.95,
-      is_onset: false,
+      onset: false,
       frequency,
       t,
-      free: jest.fn(),
     },
   }));
 

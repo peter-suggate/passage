@@ -6,7 +6,7 @@ import { Pitch } from "music-analyzer-wasm-rs";
 
 export type AudioPitchEvent = {
   type: "pitch";
-  pitch: Pitch;
+  pitch: Omit<Pitch, "free">;
 };
 
 export type AudioOnsetEvent = {

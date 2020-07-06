@@ -81,7 +81,7 @@ class AudioProcessor extends AudioWorkletProcessor {
                   frequency: p.frequency,
                   clarity: p.clarity,
                   t: p.t,
-                  is_onset: p.is_onset,
+                  onset: p.onset,
                 })),
               });
 

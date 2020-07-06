@@ -91,7 +91,7 @@ export class AudioRecorderNode extends Subject<AudioRecorderEventTypes>
       }
       case "pitches": {
         eventData.result.forEach((pitch) => {
-          if (pitch.is_onset) {
+          if (pitch.onset) {
             this.next({
               type: "onset",
               t: pitch.t,
