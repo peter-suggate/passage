@@ -1,11 +1,19 @@
-import { Note } from "../analysis";
+import {
+  Scale,
+  Bpm,
+  PosInteger,
+  bpm,
+  posInteger,
+  OctavesScale,
+  nonNegInteger,
+} from "@/lib/scales";
 
 export type Instrument = "bell" | "violin";
 
 export type SynthesizerConfig = {
   instrument: Instrument;
-  mode: "major" | "minor";
-  scale: Note;
+  scaleType: OctavesScale;
+  bpm: Bpm;
 };
 
 export const instruments: Instrument[] = ["bell", "violin"];
@@ -21,6 +29,10 @@ export const instrumentName = (instrument: Instrument): string => {
 
 export const defaultSynthConfig = (): SynthesizerConfig => ({
   instrument: "bell",
-  mode: "major",
-  scale: "C",
+  scaleType: {
+    scale: { tonic: "A", mode: "major" },
+    startOctave: nonNegInteger(2),
+    octaves: posInteger(1),
+  },
+  bpm: bpm(60),
 });

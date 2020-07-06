@@ -3,11 +3,12 @@ import { Observable, partition, of } from "rxjs";
 import { map, filter, withLatestFrom, scan } from "rxjs/operators";
 import { AudioRecorderNode } from "../recorder/webaudio/AudioRecorderNode";
 import { AudioPitchEvent, AudioOnsetEvent } from "../audio-types";
-import { frequencyToNearestNote, Note } from "./nearestNote";
+import { frequencyToNearestNote } from "./nearestNote";
 import { Pitch } from "music-analyzer-wasm-rs";
 import { cast } from "@/lib/testing/partial-impl";
 import { AudioRecorderEventTypes } from "../recorder";
 import { AudioSynthesizer } from "../recorder/synthaudio/AudioSynthesizer";
+import { Note } from "@/lib/scales";
 
 export type NoteInfo = {
   value: Note;

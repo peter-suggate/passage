@@ -5,13 +5,13 @@ import { interpret } from "xstate";
 function testMachine(optionsIn?: { createSynthAudio: () => Promise<void> }) {
   const options = {
     createSynthAudio: AudioSynthesizer.create,
-    ...optionsIn,
+    ...optionsIn
   };
 
   return setupSynthesizerMachine.withConfig({
     services: {
-      createSynthAudio: (context) => options.createSynthAudio(context.config),
-    },
+      createSynthAudio: context => options.createSynthAudio(context.config)
+    }
   });
 }
 
@@ -21,9 +21,16 @@ it("has useful initial synth config", () => {
   expect(machine.initialState.context).toMatchInlineSnapshot(`
     Object {
       "config": Object {
+        "bpm": 60,
         "instrument": "bell",
-        "mode": "major",
-        "scale": "C",
+        "scaleType": Object {
+          "octaves": 1,
+          "scale": Object {
+            "mode": "major",
+            "tonic": "A",
+          },
+          "startOctave": 2,
+        },
       },
       "node": undefined,
     }
@@ -36,12 +43,12 @@ it("remembers configuration sent to it via update config event", () => {
   expect(
     machine.transition(machine.initialState, {
       type: "UPDATE_CONFIG",
-      config: { instrument: "violin" },
+      config: { instrument: "violin" }
     }).context
   ).toMatchObject({
     config: {
-      instrument: "violin",
-    },
+      instrument: "violin"
+    }
   });
 });
 
@@ -51,16 +58,16 @@ describe("when configuration has finished", () => {
 
     expect(
       machine.transition(machine.initialState, {
-        type: "FINISH",
+        type: "FINISH"
       }).value
     ).toBe("startGenerator");
   });
 
-  test("when starting the synthesizer succeeds, transitions to success", async (done) => {
+  test("when starting the synthesizer succeeds, transitions to success", async done => {
     const machine = testMachine();
 
     const service = interpret(machine)
-      .onTransition((state) => {
+      .onTransition(state => {
         if (state.matches("success")) {
           done();
         }
@@ -70,15 +77,15 @@ describe("when configuration has finished", () => {
     service.send({ type: "FINISH" });
   });
 
-  test("when starting the synthesizer fails, transitions to error", async (done) => {
+  test("when starting the synthesizer fails, transitions to error", async done => {
     const machine = testMachine({
       createSynthAudio: async () => {
         throw Error("Synth creation failed");
-      },
+      }
     });
 
     const service = interpret(machine)
-      .onTransition((state) => {
+      .onTransition(state => {
         if (state.matches("error")) {
           done();
 

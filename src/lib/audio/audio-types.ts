@@ -1,4 +1,5 @@
 import { Pitch } from "music-analyzer-wasm-rs";
+import { Opaque } from "../fp-util/opaque";
 
 /**
  * Events that are emitted by the main thread recorder node.
