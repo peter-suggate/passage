@@ -4,13 +4,13 @@
       <v-col cols="12" sm="12" md="4">
         <v-icon style="font-size: 6rem;">mdi-microphone-outline</v-icon>
         <br />
-        <h1 class="h1">{{ status$.title }}</h1>
+        <h1 class="h1">{{ status.title }}</h1>
         <br />
         <v-row>
-          <v-btn v-if="status$.error" v-on:click="useSynthesizer">Generate audio</v-btn>
+          <v-btn v-if="status.retryable" @click="useSynthesizer">Generate waveform</v-btn>
         </v-row>
-        <v-btn v-if="!status$.settingUp" v-on:click="retry">Cancel setup</v-btn>
-        <v-btn v-if="status$.settingUp" v-on:click="cancel">Cancel setup</v-btn>
+        <v-btn v-if="status.retryable" @click="send('RETRY')">Retry</v-btn>
+        <v-btn v-if="status.cancellable" @click="send('CANCEL')">Cancel</v-btn>
       </v-col>
     </v-row>
   </v-container>
@@ -22,14 +22,82 @@ import { useService } from "@xstate/vue";
 import { map } from "rxjs/operators";
 import { audio$, audioService } from "../lib/audio";
 import { pageHeight } from "../transitions/page-transforms";
-import { AudioSetupService, AudioSetupState } from "../lib/audio/setup";
+import {
+  AudioSetupService,
+  AudioSetupState,
+  AudioSetupEvent,
+  AudioSetupContext
+} from "../lib/audio/setup";
+import { reactive, ref } from "@vue/composition-api";
+
+type Status = {
+  icon: "mdi-microphone" | "mdi-microphone-off" | "mdi-microphone-outline";
+  title: string;
+  message: string;
+  cancellable: boolean;
+  retryable: boolean;
+};
+
+const statusFromState = (state: AudioSetupState): Status => {
+  switch (state.value) {
+    case "noAudioFound":
+      return {
+        icon: "mdi-microphone-off",
+        title: "Setup failed",
+        message:
+          state.context.message || "Audio recorder not available or allowed",
+        cancellable: false,
+        retryable: true
+      };
+    case "cancelled":
+      return {
+        icon: "mdi-microphone-off",
+        title: "Cancelled",
+        message: "",
+        cancellable: false,
+        retryable: true
+      };
+    case "detectingAudio":
+    case "createAudioAnalyzer":
+      return {
+        icon: "mdi-microphone-outline",
+        title: "Detecting...",
+        message: "",
+        cancellable: true,
+        retryable: false
+      };
+    case "analyzerCreated":
+      return {
+        icon: "mdi-microphone",
+        title: "Ready",
+        message: "Microphone found",
+        cancellable: false,
+        retryable: false
+      };
+    case "analyzerError":
+      return {
+        icon: "mdi-microphone-off",
+        title: "Error",
+        message:
+          state.context.message ||
+          "Unknown error occurred finding recording device. Check you have a working microphone and it is enabled for this website in your browser settings.",
+        cancellable: false,
+        retryable: true
+      };
+  }
+};
+
+type Props = {
+  service: AudioSetupService;
+};
 
 export default {
   props: {
-    audioSetupService: Object
+    service: Object
   },
 
-  setup(props) {
+  setup(propsUnknown: unknown) {
+    const props = propsUnknown as Props;
     // const status = reactive({
     //     title: ''
     //   // count: 0,
@@ -44,14 +112,35 @@ export default {
     //     // status.title =
     //   }
     // })
-
-    const { state, send } = useService(
-      props.audioSetupService as AudioSetupService
+    const { state, send, service } = useService(
+      props.service as AudioSetupService
     );
 
+    // let serviceState = ref(state.value);
+
+    const status = ref(statusFromState(state.value as AudioSetupState));
+
+    service.value.onTransition(e => {
+      console.warn("transition", e.value, e.context.message);
+      status.value = statusFromState(e as AudioSetupState);
+    });
+
+    const useSynthesizer = () => {
+      // audioService.send("USE_SYNTH");
+      send("CANCEL");
+
+      window.scrollBy({
+        top: pageHeight(),
+        behavior: "smooth"
+      });
+    };
+
     return {
-      state,
-      send
+      // state,
+      send,
+      status,
+      useSynthesizer
+      // status: statusFromState(serviceState.value as AudioSetupState)
     };
   }
 };

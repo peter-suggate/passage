@@ -21,22 +21,22 @@ export type AudioSetupContext = WebAudio & {
   message?: string;
 };
 
-type Event = { type: "RETRY" } | { type: "CANCEL" };
+export type AudioSetupEvent = { type: "RETRY" } | { type: "CANCEL" };
 
 export type AudioSetupState = {
   context: AudioSetupContext;
 } & (
   | { value: "detectingAudio" }
-  | { value: "audioFound" }
   | { value: "noAudioFound" }
   | { value: "createAudioAnalyzer" }
   | { value: "analyzerCreated" }
   | { value: "analyzerError" }
+  | { value: "cancelled" }
 );
 
 export const audioSetupMachine = createMachine<
   AudioSetupContext,
-  Event,
+  AudioSetupEvent,
   AudioSetupState
 >(
   {
@@ -57,13 +57,19 @@ export const audioSetupMachine = createMachine<
           },
         },
         on: {
-          CANCEL: "noAudioFound",
+          CANCEL: "cancelled",
         },
+      },
+
+      cancelled: {
+        // type: "final",
+        entry: escalate("No audio recording device was found"),
       },
 
       noAudioFound: {
         on: {
           RETRY: "detectingAudio",
+          CANCEL: "cancelled",
         },
         // type: "final",
         // entry: escalate("No audio recording device was found"),

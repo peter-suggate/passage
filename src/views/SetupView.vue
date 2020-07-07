@@ -4,7 +4,7 @@
       <v-col id="triggerSetup">
         <v-row>
           <SetupStatus v-if="!setupService$" />
-          <SetupAudio v-if="setupService$" :audioSetupService="setupService$" />
+          <SetupAudio v-if="setupService$" :service="setupService$" />
         </v-row>
         <v-row v-if="setupComplete$" align="center" justify="center">
           <v-btn v-bind:style="buttonStyle$" v-on:click="listen" justify="center">Start</v-btn>

@@ -84,7 +84,7 @@ export const audioMachine = createMachine<
             })),
           },
           onError: {
-            target: "noWebAudio",
+            target: "setupSynthesizer",
             actions: assign((_, e) => ({
               message: e.data,
             })),
@@ -146,9 +146,10 @@ export const audioMachine = createMachine<
         },
       },
 
-      noWebAudio: {
-        on: { USE_SYNTH: "setupSynthesizer" },
-      },
+      // noWebAudio: {
+
+      //   // on: { USE_SYNTH: "setupSynthesizer" },
+      // },
 
       error: {},
 
