@@ -6,9 +6,11 @@
           <v-icon style="font-size: 6rem;">{{status.icon}}</v-icon>
         </v-row>
         <v-row class="row" align="center" justify="center">
-          <br />
-          <h1 class="h1">{{ status.title }}</h1>
-          <p>{{ status.message }}</p>
+          <v-col>
+            <h1 class="h1">{{ status.title }}</h1>
+            <br />
+            <p>{{ status.message }}</p>
+          </v-col>
         </v-row>
         <v-row class="row" align="center" justify="center">
           <v-btn

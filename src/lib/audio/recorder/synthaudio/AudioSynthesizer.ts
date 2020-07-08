@@ -51,9 +51,26 @@ export const pitchAtMs = (
   );
 };
 
+const TWO_PI = Math.PI * 2;
+const INV_SAMPLE_RATE = 1 / 48000;
+const sinewave = (x: number, freq: number) => {
+  const fx = x * TWO_PI * freq * INV_SAMPLE_RATE;
+  return Math.sin(fx);
+};
+
 export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
   implements Suspendable {
   private memo = new Map();
+
+  static SAMPLE_RATE = 48000;
+  static CHUNK_SIZE = 128;
+  static UPDATES_PER_SECOND =
+    AudioSynthesizer.SAMPLE_RATE / AudioSynthesizer.CHUNK_SIZE;
+
+  prevNoteFreq = 0;
+  prevNoteT = 0;
+  x = 0;
+  wasmChunkBuffer = new Float32Array(AudioSynthesizer.CHUNK_SIZE);
 
   private constructor(
     private readonly config: SynthesizerConfig,
@@ -81,30 +98,67 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
       .subscribe((frame) => this.tick(frame));
   }
 
-  prevNoteFreq = 0;
+  private sendSamplesToWasm(frame: { t: number; noteFreq: number }) {
+    const msElapsed = frame.t - this.prevNoteT;
+    const chunks = Math.floor(
+      (AudioSynthesizer.UPDATES_PER_SECOND * msElapsed) / 1000
+    );
+    for (let i = 0; i < chunks; i++) {
+      for (let dx = 0; dx < AudioSynthesizer.CHUNK_SIZE; dx++)
+        this.wasmChunkBuffer[dx] = sinewave(this.x++, frame.noteFreq);
+      this.wasmSamplesProcessor.add_samples_chunk(this.wasmChunkBuffer);
+    }
+    this.prevNoteT = frame.t;
+  }
 
   tick(frame: { t: number; noteFreq: number }) {
-    const SAMPLE_RATE = 48000;
-    const CHUNK_SIZE = 128;
-    const UPDATES_PER_SECOND = SAMPLE_RATE / CHUNK_SIZE;
-    // this.wasmSamplesProcessor.add_samples_chunk();
+    this.sendSamplesToWasm(frame);
 
-    if (frame.noteFreq !== this.prevNoteFreq) {
-      this.next({
-        type: "onset",
-        t: frame.t,
-      });
+    this.wasmSamplesProcessor.set_latest_samples_on(this.pitchDetector);
+
+    const result = this.pitchDetector.pitches();
+
+    if (result.code !== "success") {
+      console.log("error getting pitches", result.message);
+    } else {
+      const pitches = result.pitches;
+      if (pitches.length > 0) {
+        pitches.forEach((pitch) => {
+          this.next({
+            type: "pitch",
+            pitch,
+          });
+        });
+
+        // this.port.postMessage({
+        //   type: "pitches",
+        //   result: pitches.map((p) => ({
+        //     frequency: p.frequency,
+        //     clarity: p.clarity,
+        //     t: p.t,
+        //     onset: p.onset,
+        //   })),
+        // });
+
+        pitches.forEach((p) => p.free());
+      }
     }
+    // if (frame.noteFreq !== this.prevNoteFreq) {
+    //   this.next({
+    //     type: "onset",
+    //     t: frame.t,
+    //   });
+    // }
 
-    this.next({
-      type: "pitch",
-      pitch: {
-        clarity: 0.9,
-        frequency: frame.noteFreq,
-        onset: false,
-        t: frame.t,
-      },
-    });
+    // this.next({
+    //   type: "pitch",
+    //   pitch: {
+    //     clarity: 0.9,
+    //     frequency: frame.noteFreq,
+    //     onset: false,
+    //     t: frame.t,
+    //   },
+    // });
   }
 
   static async create(config: SynthesizerConfig) {
