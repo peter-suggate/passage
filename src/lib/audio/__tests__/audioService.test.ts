@@ -7,7 +7,7 @@ import { setupSynthesizerMachine } from "../synth";
 
 function testMachine(optionsIn?: typeof audioMachine.options.services) {
   const options = {
-    initBrowserAudio: (context: AudioServiceContext) => audioSetupMachine,
+    audioSetup: (context: AudioServiceContext) => audioSetupMachine,
     resume: (context: AudioServiceContext) => resumeAudio(context.audio!),
     suspend: (context: AudioServiceContext) => suspendAudio(context.audio!),
     analyzer: () => analyzerMachine,
@@ -24,13 +24,13 @@ it("enters setup when started", () => {
   const machine = testMachine();
 
   expect(machine.transition(machine.initialState, "START").value).toBe(
-    "setupStart"
+    "setupAudio"
   );
 });
 
 test("when setting up audio fails, transitions to no web audio", async (done) => {
   const machine = testMachine({
-    initBrowserAudio: async () => {
+    audioSetup: async () => {
       throw Error("Setup audio failed");
     },
   });

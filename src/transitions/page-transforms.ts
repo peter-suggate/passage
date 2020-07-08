@@ -130,7 +130,7 @@ const listenPage = pageConfig({
 
 // export const appPageConfigs: Record<AudioValidStates, PageConfig[]> = {
 //   uninitialized: [homePage, setupPage],
-//   setupStart: [homePage, setupPage],
+//   setupAudio: [homePage, setupPage],
 //   setupSynthesizer: [homePage, setupPage, setupSynthPage],
 //   error: [homePage, setupPage],
 //   resuming: [homePage, setupPage, listenPage],
@@ -145,7 +145,7 @@ export const appPageConfig = (state: AudioState): PageConfig[] => {
 
   switch (value) {
     case "uninitialized":
-    case "setupStart":
+    case "setupAudio":
       return base;
   }
 
@@ -161,6 +161,23 @@ export const appPageConfig = (state: AudioState): PageConfig[] => {
   base.push(listenPage);
 
   return base;
+};
+
+export const pageIndexForState = (state: AudioState) => {
+  const config = appPageConfig(state);
+  switch (state.value) {
+    case "uninitialized":
+      return 0;
+    case "noWebAudio":
+    case "setupAudio":
+      return config.findIndex((page) => page.component === "Setup");
+    case "setupSynthesizer":
+      return config.findIndex(
+        (page) => page.component === "ConfigureSynthView"
+      );
+    default:
+      return config.findIndex((page) => page.component === "Listen");
+  }
 };
 
 export const PAGE_OVERLAP = fraction(0.05);

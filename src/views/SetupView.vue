@@ -65,7 +65,7 @@ export default Vue.extend({
     return {
       setupService$: audio$.pipe(
         map(e =>
-          e.value === "setupStart"
+          e.value === "setupAudio"
             ? audioService.children.get("audioSetup")
             : undefined
         )

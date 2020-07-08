@@ -2,6 +2,14 @@
   <v-container fluid style="height: 100%">
     <v-row align="center" justify="center" style="height: 100%">
       <v-col>
+        <v-row align="center">
+          <v-col>
+            <v-btn v-on:click="back" justify="center" outlined color="secondary">
+              <v-icon>mdi-chevron-double-left</v-icon>Back
+            </v-btn>
+          </v-col>
+        </v-row>
+        <v-spacer />
         <v-row>
           <ConfigureSynth />
         </v-row>
@@ -21,9 +29,11 @@ import {
   pageScrollY$,
   opacityFadeout,
   fraction,
-  PAGE_SIZE_FRAC
+  pageTop,
+  pageIndexForState
 } from "../transitions/page-transforms";
 import { map } from "rxjs/operators";
+import { AudioState } from "../lib/audio/audioService";
 
 export default Vue.extend({
   name: "ConfigureSynthView",
@@ -78,8 +88,15 @@ export default Vue.extend({
     listen: function() {
       audioService.send("RESUME");
 
-      window.scrollBy({
-        top: PAGE_SIZE_FRAC * window.innerHeight,
+      window.scroll({
+        top: pageTop(pageIndexForState(audioService.state as AudioState)),
+        behavior: "smooth"
+      });
+    },
+
+    back: function() {
+      window.scroll({
+        top: pageTop(pageIndexForState(audioService.state as AudioState) - 1),
         behavior: "smooth"
       });
     }

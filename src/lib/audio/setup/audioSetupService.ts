@@ -1,12 +1,4 @@
-import {
-  createMachine,
-  interpret,
-  assign,
-  DoneInvokeEvent,
-  sendParent,
-} from "xstate";
-import { fromEventPattern } from "rxjs";
-import { shareReplay } from "rxjs/operators";
+import { createMachine, interpret, assign, DoneInvokeEvent } from "xstate";
 import { getWebAudioMediaStream, connectAnalyzer } from "./audioSetupEffects";
 import { AudioRecorderNode } from "../recorder/webaudio/AudioRecorderNode";
 import { escalate } from "xstate/lib/actions";
@@ -62,17 +54,12 @@ export const audioSetupMachine = createMachine<
       },
 
       cancelled: {
-        // type: "final",
         entry: escalate("No audio recording device was found"),
       },
 
       noAudioFound: {
-        on: {
-          RETRY: "detectingAudio",
-          CANCEL: "cancelled",
-        },
-        // type: "final",
-        // entry: escalate("No audio recording device was found"),
+        type: "final",
+        entry: escalate("No audio recording device was found"),
       },
 
       createAudioAnalyzer: {
@@ -114,7 +101,6 @@ export const audioSetupMachine = createMachine<
             message: context.message,
           };
         },
-        // on: { DETECT: "createAudioAnalyzer" },
       },
     },
   },
@@ -148,20 +134,3 @@ export const makeAudioSetupService = () =>
     .start();
 
 export type AudioSetupService = ReturnType<typeof makeAudioSetupService>;
-
-// State machine services don't give you states, but an observable of [state, event],
-// if you want to have the state only use fromEventPattern.
-export const audioSetup$ = (
-  service: ReturnType<typeof makeAudioSetupService>
-) =>
-  fromEventPattern<AudioSetupState>(
-    (handler) => {
-      service
-        // Listen for state transitions
-        .onTransition((state, _) => handler(state))
-        // Start the service
-        .start();
-      return service;
-    },
-    (_, service) => service.stop()
-  ).pipe(shareReplay(1));

@@ -2,7 +2,7 @@
   <div class="home-view">
     <img
       src="/img/beethoven.svg"
-      style="opacity: 0.15; position: absolute; width: 100%; transform: translateY(5vh)"
+      style="opacity: 0.15; position: absolute; width: 100%; max-height: 90vh; transform: translateY(5vh)"
     />
     <v-row class="text-center">
       <v-col cols="12">
@@ -30,7 +30,7 @@ import {
   pageScrollY$,
   opacityFadeout,
   scrollKeepVisible,
-  pageHeight,
+  pageHeight
 } from "@/transitions/page-transforms";
 import { map } from "rxjs/operators";
 
@@ -38,7 +38,7 @@ export default Vue.extend({
   name: "HomeView",
 
   components: {
-    Home,
+    Home
   },
 
   subscriptions: function(this) {
@@ -49,7 +49,7 @@ export default Vue.extend({
           if (scrollYRelPageFrac > 0.4) {
             return {
               position: "fixed",
-              top: pageHeight * 0.05,
+              top: pageHeight * 0.05
             };
           } else {
             const offsetY = scrollKeepVisible(fraction(0.4), fraction(0.05))(
@@ -60,7 +60,7 @@ export default Vue.extend({
 
             return {
               transform: `translateY(${offsetY}px)`,
-              willChange: "transform",
+              willChange: "transform"
             };
           }
         })
@@ -73,9 +73,9 @@ export default Vue.extend({
           // Position near middle of page.
           transform: offsetInPage(fraction(0.6)),
 
-          willChange: "opacity",
+          willChange: "opacity"
         }))
-      ),
+      )
     };
   },
 
@@ -85,9 +85,9 @@ export default Vue.extend({
 
       window.scrollBy({
         top: pageHeight(),
-        behavior: "smooth",
+        behavior: "smooth"
       });
-    },
-  },
+    }
+  }
 });
 </script>

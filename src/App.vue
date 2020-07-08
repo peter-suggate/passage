@@ -8,7 +8,6 @@
       >
         <component :is="component"></component>
       </div>
-      <!-- <router-view></router-view> -->
     </v-main>
   </v-app>
 </template>
@@ -22,7 +21,7 @@ import {
   pageStyles$
 } from "@/transitions/page-transforms";
 import { audioService } from "./lib/audio";
-import { AudioValidStates, AudioState } from "./lib/audio/audioService";
+import { AudioState } from "./lib/audio/audioService";
 
 export default Vue.extend({
   name: "App",
@@ -49,13 +48,8 @@ export default Vue.extend({
   subscriptions: function(this) {
     return {
       pageStyles$: pageStyles$()
-      // $: redirectOnAudioServiceStateChange$(this),
     };
   },
-
-  // beforeRouteEnter(to, from, next) {
-  //   redirect(next);
-  // },
 
   created: function(this) {
     audioService.onTransition(state => {

@@ -17,7 +17,6 @@ import { resumeAudio, suspendAudio } from "./audioEffects";
 import { AudioRecorderNode } from "./recorder/webaudio/AudioRecorderNode";
 import { AudioSynthesizer } from "./recorder/synthaudio/AudioSynthesizer";
 import { ANIM_CONSTANTS } from "@/transitions/constants";
-import { analyzerMachine } from "./analysis/analyzerService";
 import { SynthesizerConfig } from "./synth/synth-types";
 
 export type AudioServiceContext = {
@@ -31,11 +30,12 @@ type Event =
   | { type: "START" }
   | { type: "RESUME" }
   | { type: "STOP" }
-  | { type: "USE_SYNTH" };
+  | { type: "USE_SYNTH" }
+  | { type: "USE_AUDIO" };
 
 export type AudioValidStates =
   | "uninitialized"
-  | "setupStart"
+  | "setupAudio"
   | "noWebAudio"
   | "setupSynthesizer"
   | "running"
@@ -63,13 +63,13 @@ export const audioMachine = createMachine<
     states: {
       uninitialized: {
         on: {
-          START: "setupStart",
+          START: "setupAudio",
           USE_SYNTH: "setupSynthesizer",
         },
       },
 
       // Perform audio setup using the audioSetup child service.
-      setupStart: {
+      setupAudio: {
         invoke: {
           src: "audioSetup",
           onDone: {
@@ -84,7 +84,7 @@ export const audioMachine = createMachine<
             })),
           },
           onError: {
-            target: "setupSynthesizer",
+            target: "noWebAudio",
             actions: assign((_, e) => ({
               message: e.data,
             })),
@@ -121,6 +121,7 @@ export const audioMachine = createMachine<
         },
         on: {
           STOP: "suspending",
+          USE_AUDIO: "setupAudio",
           // STOP: "transitionRunningToSuspended",
         },
       },
@@ -146,10 +147,9 @@ export const audioMachine = createMachine<
         },
       },
 
-      // noWebAudio: {
-
-      //   // on: { USE_SYNTH: "setupSynthesizer" },
-      // },
+      noWebAudio: {
+        on: { USE_SYNTH: "setupSynthesizer" },
+      },
 
       error: {},
 
@@ -163,7 +163,6 @@ export const audioMachine = createMachine<
                 synthConfig: (_, e) => e.data.config,
                 analyzer$: (_, e) => e.data.node,
               }),
-              // (_, e) => console.log("setupSynthesizer completed", _, e),
             ],
           },
           onError: {
@@ -172,14 +171,14 @@ export const audioMachine = createMachine<
               assign({
                 message: (_, e) => e.data,
               }),
-              // (_, e) => console.log("setupSynthesizer error", _, e),
             ],
           },
         },
+        on: { USE_AUDIO: "setupAudio" },
       },
 
       suspended: {
-        on: { RESUME: "resuming" },
+        on: { RESUME: "resuming", USE_AUDIO: "setupAudio" },
         // on: { START: "transitionUninitializedToSetup" },
       },
     },

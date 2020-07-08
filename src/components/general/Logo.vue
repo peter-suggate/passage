@@ -1,5 +1,5 @@
 <template>
-  <v-row justify="center">
+  <v-row justify="center" align="center">
     <v-icon style="font-size: 6rem;">mdi-fast-forward-outline</v-icon>
     <span class="display-3 font-weight-bold">Passage</span>
   </v-row>
