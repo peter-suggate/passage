@@ -45,7 +45,9 @@ export const audioSetupMachine = createMachine<
           },
           onError: {
             target: "noAudioFound",
-            actions: assign((_context, event) => ({ message: event.data })),
+            actions: assign((_context, event) => ({
+              message: event.data.message,
+            })),
           },
         },
         on: {
@@ -58,8 +60,9 @@ export const audioSetupMachine = createMachine<
       },
 
       noAudioFound: {
-        type: "final",
-        entry: escalate("No audio recording device was found"),
+        entry: escalate(
+          (context) => context.message || "No audio recording device was found"
+        ),
       },
 
       createAudioAnalyzer: {

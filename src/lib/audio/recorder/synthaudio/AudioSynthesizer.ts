@@ -114,6 +114,10 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
   tick(frame: { t: number; noteFreq: number }) {
     this.sendSamplesToWasm(frame);
 
+    if (!this.wasmSamplesProcessor.has_sufficient_samples()) {
+      return;
+    }
+
     this.wasmSamplesProcessor.set_latest_samples_on(this.pitchDetector);
 
     const result = this.pitchDetector.pitches();
@@ -124,23 +128,20 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
       const pitches = result.pitches;
       if (pitches.length > 0) {
         pitches.forEach((pitch) => {
-          this.next({
-            type: "pitch",
-            pitch,
-          });
+          if (pitch.onset) {
+            this.next({
+              type: "onset",
+              t: pitch.t,
+            });
+          } else {
+            this.next({
+              type: "pitch",
+              pitch,
+            });
+          }
         });
 
-        // this.port.postMessage({
-        //   type: "pitches",
-        //   result: pitches.map((p) => ({
-        //     frequency: p.frequency,
-        //     clarity: p.clarity,
-        //     t: p.t,
-        //     onset: p.onset,
-        //   })),
-        // });
-
-        pitches.forEach((p) => p.free());
+        // pitches.forEach((p) => p.free());
       }
     }
     // if (frame.noteFreq !== this.prevNoteFreq) {

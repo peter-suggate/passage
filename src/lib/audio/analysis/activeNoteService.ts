@@ -59,7 +59,7 @@ export const activeNoteMachine = createMachine<
               scan<PartitionedEvents, PartitionedEvents[]>((acc, curr) => {
                 acc.push(curr);
 
-                if (acc.length > 25) {
+                if (acc.length > 15) {
                   acc.shift();
                 }
 
@@ -73,6 +73,15 @@ export const activeNoteMachine = createMachine<
                       cast<AudioPitchEvent>(a[0]).pitch.frequency -
                       cast<AudioPitchEvent>(b[0]).pitch.frequency
                   );
+
+                // const HALF_AVERAGE_WINDOW = 5;
+                // const middle = arr.length / 2 | 0;
+                // const startIndex = middle - HALF_AVERAGE_WINDOW;
+                // const endIndex = middle + HALF_AVERAGE_WINDOW;
+                // return arr.slice(startIndex, endIndex).reduce((acc, curr) => acc + curr, arr[0]);
+                // console.log(
+                //   arr.map((a) => cast<AudioPitchEvent>(a[0]).pitch.frequency)
+                // );
                 return arr[(arr.length / 2) | 0];
               }),
               map(([p, onset]) => {
