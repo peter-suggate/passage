@@ -3,7 +3,7 @@
     <v-row class="text-center fit-content" align="center" justify="center">
       <v-col cols="12" sm="10" md="6" lg="5">
         <v-row class="row" align="center" justify="center">
-          <v-icon style="font-size: 6rem;">{{status.icon}}</v-icon>
+          <v-icon style="font-size: 6rem;">{{ status.icon }}</v-icon>
         </v-row>
         <v-row class="row" align="center" justify="center">
           <v-col>
@@ -19,15 +19,19 @@
             @click="useAudio"
             color="primary"
             outlined
-          >Use Audio</v-btn>
+            >Use Audio</v-btn
+          >
           <v-btn
             class="ma-2"
             v-if="status.retryable"
             @click="useSynthesizer"
             color="primary"
             outlined
-          >Use synthesizer</v-btn>
-          <v-btn class="ma-2" v-if="status.retryable" @click="send('RETRY')">Retry</v-btn>
+            >Use synthesizer</v-btn
+          >
+          <v-btn class="ma-2" v-if="status.retryable" @click="send('RETRY')"
+            >Retry</v-btn
+          >
         </v-row>
       </v-col>
     </v-row>
@@ -36,7 +40,7 @@
 
 <style lang="scss" scoped>
 .row {
-  height: 15vh;
+  min-height: 15vh;
 }
 
 .fit-content {
@@ -52,7 +56,7 @@ import { useService } from "@xstate/vue";
 import {
   pageHeight,
   pageTop,
-  pageIndexForState
+  pageIndexForState,
 } from "../transitions/page-transforms";
 
 type Status = {
@@ -69,10 +73,10 @@ const statusFromState = (state: AudioState): Status => {
     case "error":
       return {
         icon: "mdi-microphone-off",
-        title: "Setup failed",
+        title: "No microphone",
         message:
           state.context.message || "Audio recorder not available or allowed",
-        retryable: true
+        retryable: true,
       };
     case "setupSynthesizer":
       return {
@@ -81,23 +85,23 @@ const statusFromState = (state: AudioState): Status => {
         message:
           state.context.message || "Audio recorder not available or allowed",
         useAudio: true,
-        retryable: false
+        retryable: false,
       };
     case "running":
     case "resuming":
     case "suspended":
       return {
         icon: "mdi-microphone",
-        title: "Audio found",
+        title: "Microphone found",
         message: "",
-        retryable: false
+        retryable: false,
       };
     default:
       return {
         icon: "mdi-microphone-outline",
         title: "",
         message: "",
-        retryable: false
+        retryable: false,
       };
   }
 };
@@ -110,8 +114,7 @@ export default {
 
     const status = ref(statusFromState(audioState));
 
-    service.value.onTransition(e => {
-      console.warn("transition", e.value, e.context.message);
+    service.value.onTransition((e) => {
       status.value = statusFromState(e as AudioState);
     });
 
@@ -121,7 +124,7 @@ export default {
       setTimeout(() => {
         window.scrollBy({
           top: pageHeight(),
-          behavior: "smooth"
+          behavior: "smooth",
         });
       }, 0);
     };
@@ -132,7 +135,7 @@ export default {
       setTimeout(() => {
         window.scroll({
           top: pageTop(pageIndexForState(audioState)),
-          behavior: "smooth"
+          behavior: "smooth",
         });
       }, 0);
     };
@@ -141,8 +144,8 @@ export default {
       send,
       status,
       useSynthesizer,
-      useAudio
+      useAudio,
     };
-  }
+  },
 };
 </script>

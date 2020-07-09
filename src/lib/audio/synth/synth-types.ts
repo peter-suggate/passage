@@ -1,7 +1,5 @@
 import {
-  Scale,
   Bpm,
-  PosInteger,
   bpm,
   posInteger,
   OctavesScale,

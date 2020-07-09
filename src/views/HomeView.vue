@@ -30,15 +30,17 @@ import {
   pageScrollY$,
   opacityFadeout,
   scrollKeepVisible,
-  pageHeight
+  pageTop,
+  pageIndexForState,
 } from "@/transitions/page-transforms";
 import { map } from "rxjs/operators";
+import { AudioState } from "../lib/audio/audioService";
 
 export default Vue.extend({
   name: "HomeView",
 
   components: {
-    Home
+    Home,
   },
 
   subscriptions: function(this) {
@@ -49,7 +51,7 @@ export default Vue.extend({
           if (scrollYRelPageFrac > 0.4) {
             return {
               position: "fixed",
-              top: pageHeight * 0.05
+              top: pageHeight * 0.05,
             };
           } else {
             const offsetY = scrollKeepVisible(fraction(0.4), fraction(0.05))(
@@ -60,7 +62,7 @@ export default Vue.extend({
 
             return {
               transform: `translateY(${offsetY}px)`,
-              willChange: "transform"
+              willChange: "transform",
             };
           }
         })
@@ -73,9 +75,9 @@ export default Vue.extend({
           // Position near middle of page.
           transform: offsetInPage(fraction(0.6)),
 
-          willChange: "opacity"
+          willChange: "opacity",
         }))
-      )
+      ),
     };
   },
 
@@ -83,11 +85,11 @@ export default Vue.extend({
     begin: function() {
       audioService.send("START");
 
-      window.scrollBy({
-        top: pageHeight(),
-        behavior: "smooth"
+      window.scroll({
+        top: pageTop(pageIndexForState(audioService.state as AudioState)),
+        behavior: "smooth",
       });
-    }
-  }
+    },
+  },
 });
 </script>

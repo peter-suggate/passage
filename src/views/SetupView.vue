@@ -7,7 +7,12 @@
           <SetupAudio v-if="setupService$" :service="setupService$" />
         </v-row>
         <v-row v-if="setupComplete$" align="center" justify="center">
-          <v-btn v-bind:style="buttonStyle$" v-on:click="listen" justify="center">Start</v-btn>
+          <v-btn
+            v-bind:style="buttonStyle$"
+            v-on:click="listen"
+            justify="center"
+            >Start</v-btn
+          >
         </v-row>
       </v-col>
     </v-row>
@@ -23,28 +28,30 @@ import {
   pageScrollY$,
   opacityFadeout,
   fraction,
-  PAGE_SIZE_FRAC
+  pageTop,
+  pageIndexForState,
 } from "../transitions/page-transforms";
 import { map } from "rxjs/operators";
+import { AudioState } from "../lib/audio/audioService";
 
 export default Vue.extend({
   name: "SetupView",
 
   components: {
     SetupAudio,
-    SetupStatus
+    SetupStatus,
   },
 
   data: () =>
     ({
-      observer: undefined
+      observer: undefined,
     } as {
       observer: undefined | IntersectionObserver;
     }),
 
   mounted() {
-    const callback: IntersectionObserverCallback = entries => {
-      entries.forEach(entry => {
+    const callback: IntersectionObserverCallback = (entries) => {
+      entries.forEach((entry) => {
         if (entry.isIntersecting) {
           audioService.send("START");
         }
@@ -53,7 +60,7 @@ export default Vue.extend({
 
     this.observer = new IntersectionObserver(callback, {
       root: null,
-      threshold: 0.5
+      threshold: 0.5,
     });
 
     const target = document.querySelector("#triggerSetup");
@@ -64,23 +71,23 @@ export default Vue.extend({
     const pageIndex = 1;
     return {
       setupService$: audio$.pipe(
-        map(e =>
+        map((e) =>
           e.value === "setupAudio"
             ? audioService.children.get("audioSetup")
             : undefined
         )
       ),
       setupComplete$: audio$.pipe(
-        map(e => e.value === "suspended" || e.value === "running")
+        map((e) => e.value === "suspended" || e.value === "running")
       ),
       buttonStyle$: pageScrollY$(pageIndex).pipe(
         map(({ scrollYRelPageFrac }) => ({
           // Fully hidden at 10% scroll.
           opacity: opacityFadeout(scrollYRelPageFrac, fraction(0.1)),
 
-          willChange: "opacity"
+          willChange: "opacity",
         }))
-      )
+      ),
     };
   },
 
@@ -88,11 +95,11 @@ export default Vue.extend({
     listen: function() {
       audioService.send("RESUME");
 
-      window.scrollBy({
-        top: PAGE_SIZE_FRAC * window.innerHeight,
-        behavior: "smooth"
+      window.scroll({
+        top: pageTop(pageIndexForState(audioService.state as AudioState)),
+        behavior: "smooth",
       });
-    }
-  }
+    },
+  },
 });
 </script>

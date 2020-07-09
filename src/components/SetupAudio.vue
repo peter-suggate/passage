@@ -21,7 +21,7 @@
 
 <style lang="scss" scoped>
 .row {
-  height: 15vh;
+  min-height: 15vh;
 }
 
 .fit-content {

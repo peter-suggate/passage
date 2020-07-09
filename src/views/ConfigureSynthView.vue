@@ -2,19 +2,24 @@
   <v-container fluid style="height: 100%">
     <v-row align="center" justify="center" style="height: 100%">
       <v-col>
-        <v-row align="center">
+        <!-- <v-row align="center">
           <v-col>
             <v-btn v-on:click="back" justify="center" outlined color="secondary">
               <v-icon>mdi-chevron-double-left</v-icon>Back
             </v-btn>
           </v-col>
-        </v-row>
+        </v-row> -->
         <v-spacer />
         <v-row>
           <ConfigureSynth />
         </v-row>
         <v-row align="center" justify="center" id="triggerFinished">
-          <v-btn v-bind:style="buttonStyle$" v-on:click="listen" justify="center">Finished</v-btn>
+          <v-btn
+            v-bind:style="buttonStyle$"
+            v-on:click="listen"
+            justify="center"
+            >Finished</v-btn
+          >
         </v-row>
       </v-col>
     </v-row>
@@ -30,7 +35,7 @@ import {
   opacityFadeout,
   fraction,
   pageTop,
-  pageIndexForState
+  pageIndexForState,
 } from "../transitions/page-transforms";
 import { map } from "rxjs/operators";
 import { AudioState } from "../lib/audio/audioService";
@@ -39,19 +44,19 @@ export default Vue.extend({
   name: "ConfigureSynthView",
 
   components: {
-    ConfigureSynth
+    ConfigureSynth,
   },
 
   data: () =>
     ({
-      observer: undefined
+      observer: undefined,
     } as {
       observer: undefined | IntersectionObserver;
     }),
 
   mounted() {
-    const callback: IntersectionObserverCallback = entries => {
-      entries.forEach(entry => {
+    const callback: IntersectionObserverCallback = (entries) => {
+      entries.forEach((entry) => {
         if (entry.isIntersecting) {
           audioService.send("START");
         }
@@ -60,7 +65,7 @@ export default Vue.extend({
 
     this.observer = new IntersectionObserver(callback, {
       root: null,
-      threshold: 0.5
+      threshold: 0.5,
     });
 
     const target = document.querySelector("#triggerFinished");
@@ -71,16 +76,16 @@ export default Vue.extend({
     const pageIndex = 1;
     return {
       setupComplete$: audio$.pipe(
-        map(e => e.value === "suspended" || e.value === "running")
+        map((e) => e.value === "suspended" || e.value === "running")
       ),
       buttonStyle$: pageScrollY$(pageIndex).pipe(
         map(({ scrollYRelPageFrac }) => ({
           // Fully hidden at 10% scroll.
           opacity: opacityFadeout(scrollYRelPageFrac, fraction(0.1)),
 
-          willChange: "opacity"
+          willChange: "opacity",
         }))
-      )
+      ),
     };
   },
 
@@ -90,16 +95,16 @@ export default Vue.extend({
 
       window.scroll({
         top: pageTop(pageIndexForState(audioService.state as AudioState)),
-        behavior: "smooth"
+        behavior: "smooth",
       });
     },
 
     back: function() {
       window.scroll({
         top: pageTop(pageIndexForState(audioService.state as AudioState) - 1),
-        behavior: "smooth"
+        behavior: "smooth",
       });
-    }
-  }
+    },
+  },
 });
 </script>
