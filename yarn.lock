@@ -3967,6 +3967,11 @@ ecc-jsbn@~0.1.1:
     jsbn "~0.1.0"
     safer-buffer "^2.1.0"
 
+edit-distance-search@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/edit-distance-search/-/edit-distance-search-0.1.1.tgz#b54de07ea35329fcb80157842107261aeab561e4"
+  integrity sha512-DEd5LdNNjcfoNjamMD25P+AOk5odnF+TZfE8RL+0fldg542Cp2wOWy1jVsILif42LhI6o+k826fsZDfddiOhCg==
+
 editorconfig@^0.15.3:
   version "0.15.3"
   resolved "https://registry.yarnpkg.com/editorconfig/-/editorconfig-0.15.3.tgz#bef84c4e75fb8dcb0ce5cee8efd51c15999befc5"

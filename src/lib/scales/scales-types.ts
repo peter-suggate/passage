@@ -19,10 +19,16 @@ export const posInteger = (value: number): PosInteger => {
   return (value | 0) as PosInteger;
 };
 
+export type Integer = Opaque<"Integer", number>;
+
+export const integer = (value: number): Integer => {
+  return (value | 0) as Integer;
+};
+
 export type NonNegInteger = Opaque<"NonNegInteger", number>;
 
 export const nonNegInteger = (value: number): NonNegInteger => {
-  if (value <= 0) {
+  if (value < 0) {
     throw Error("Valid NonNegIntegers must be >= 0, got: " + value);
   }
 
