@@ -26,3 +26,16 @@ export const pieceMatch = (phrase: NoteDelta[], bank: MusicBank) => {
 
   return closest.name;
 };
+
+export const closestMatches = (phrase: NoteDelta[], bank: MusicBank) => {
+  return bank
+    .map((piece) => {
+      const distance = phraseMatch(phrase, piece.notes);
+
+      return {
+        distance,
+        piece,
+      };
+    })
+    .sort((a, b) => a.distance - b.distance);
+};

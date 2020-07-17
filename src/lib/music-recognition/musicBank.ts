@@ -29,59 +29,26 @@ export const FRENCH_FOLK_SONG = PhraseBuilder()
   .down()
   .push("B", "A", "G", "F#", "E", "D", "E", "D");
 
-export const MAJOR_SCALE = PhraseBuilder().push(
-  "C",
-  "D",
-  "E",
-  "F",
-  "G",
-  "A",
-  "B",
-  "C",
-  "B",
-  "A",
-  "G",
-  "F",
-  "E",
-  "D",
-  "C"
-);
+export const MAJOR_SCALE = PhraseBuilder()
+  .push("C", "D", "E", "F", "G", "A", "B")
+  .up()
+  .push("C")
+  .down()
+  .push("B", "A", "G", "F", "E", "D", "C");
 
-export const HARMONIC_MINOR_SCALE = PhraseBuilder().push(
-  "C",
-  "D",
-  "D#",
-  "F",
-  "G",
-  "G#",
-  "B",
-  "C",
-  "B",
-  "G#",
-  "G",
-  "F",
-  "D#",
-  "D",
-  "C"
-);
+export const HARMONIC_MINOR_SCALE = PhraseBuilder()
+  .push("C", "D", "D#", "F", "G", "G#", "B")
+  .up()
+  .push("C")
+  .down()
+  .push("B", "G#", "G", "F", "D#", "D", "C");
 
-export const MELODIC_MINOR_SCALE = PhraseBuilder().push(
-  "C",
-  "D",
-  "D#",
-  "F",
-  "G",
-  "A",
-  "B",
-  "C",
-  "A#",
-  "G#",
-  "G",
-  "F",
-  "D#",
-  "D",
-  "C"
-);
+export const MELODIC_MINOR_SCALE = PhraseBuilder()
+  .push("C", "D", "D#", "F", "G", "A", "B")
+  .up()
+  .push("C")
+  .down()
+  .push("A#", "G#", "G", "F", "D#", "D", "C");
 
 export const musicBank = (): MusicBank =>
   [

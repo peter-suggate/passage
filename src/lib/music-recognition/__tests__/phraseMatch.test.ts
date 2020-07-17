@@ -1,5 +1,10 @@
-import { phraseMatch, pieceMatch } from "../phraseMatch";
-import { TWINKLE, FRENCH_FOLK_SONG, musicBank } from "../musicBank";
+import { phraseMatch, pieceMatch, closestMatches } from "../phraseMatch";
+import {
+  TWINKLE,
+  FRENCH_FOLK_SONG,
+  musicBank,
+  MAJOR_SCALE
+} from "../musicBank";
 import { PhraseBuilder } from "../PhraseBuilder";
 
 it("returns exact match when correct notes from beginning are used", () => {
@@ -30,17 +35,6 @@ describe("finding closest matching piece to a phrase", () => {
     ).toBe("Major Scale");
   });
 
-  it("matches major scale on a descending phrase", () => {
-    console.log(PhraseBuilder().push("B", "A", "G", "F#", "E", "D").noteDeltas);
-
-    expect(
-      pieceMatch(
-        PhraseBuilder().push("B", "A", "G", "F#", "E", "D").noteDeltas,
-        musicBank()
-      )
-    ).toBe("Major Scale");
-  });
-
   it("matches harmonic minor scale in any key", () => {
     expect(
       pieceMatch(
@@ -48,5 +42,39 @@ describe("finding closest matching piece to a phrase", () => {
         musicBank()
       )
     ).toBe("Harmonic Minor Scale");
+  });
+});
+
+describe("finding multiple closest matches", () => {
+  it("matches correctly on a descending scale fragment", () => {
+    expect(
+      closestMatches(
+        PhraseBuilder().push("B", "A", "G", "F#", "E", "D").noteDeltas,
+        musicBank()
+      ).map(val => ({ name: val.piece.name, distance: val.distance }))
+    ).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "distance": 1,
+          "name": "Twinkle",
+        },
+        Object {
+          "distance": 1,
+          "name": "French Folk Song",
+        },
+        Object {
+          "distance": 1,
+          "name": "Major Scale",
+        },
+        Object {
+          "distance": 1,
+          "name": "Melodic Minor Scale",
+        },
+        Object {
+          "distance": 3,
+          "name": "Harmonic Minor Scale",
+        },
+      ]
+    `);
   });
 });
