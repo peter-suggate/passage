@@ -9,6 +9,7 @@ import { cast } from "@/lib/testing/partial-impl";
 import { AudioRecorderEventTypes } from "../recorder";
 import { AudioSynthesizer } from "../recorder/synthaudio/AudioSynthesizer";
 import { Note } from "@/lib/scales";
+import { analyzer$ } from "./analyzer";
 
 export type NoteInfo = {
   value: Note;
@@ -43,58 +44,7 @@ export const activeNoteMachine = createMachine<
     states: {
       running: {
         entry: assign<ActiveNoteContext, Event>({
-          note$: (context) => {
-            type PartitionedEvents = [
-              AudioRecorderEventTypes,
-              AudioRecorderEventTypes
-            ];
-
-            const [onsets$, pitches$] = partition(
-              context.analyzerEvents$!,
-              (e) => e.type === "onset"
-            );
-
-            return pitches$.pipe(
-              withLatestFrom(onsets$),
-              scan<PartitionedEvents, PartitionedEvents[]>((acc, curr) => {
-                acc.push(curr);
-
-                if (acc.length > 15) {
-                  acc.shift();
-                }
-
-                return acc;
-              }, []),
-              map((arr) => {
-                arr
-                  .slice()
-                  .sort(
-                    (a, b) =>
-                      cast<AudioPitchEvent>(a[0]).pitch.frequency -
-                      cast<AudioPitchEvent>(b[0]).pitch.frequency
-                  );
-
-                // const HALF_AVERAGE_WINDOW = 5;
-                // const middle = arr.length / 2 | 0;
-                // const startIndex = middle - HALF_AVERAGE_WINDOW;
-                // const endIndex = middle + HALF_AVERAGE_WINDOW;
-                // return arr.slice(startIndex, endIndex).reduce((acc, curr) => acc + curr, arr[0]);
-                // console.log(
-                //   arr.map((a) => cast<AudioPitchEvent>(a[0]).pitch.frequency)
-                // );
-                return arr[(arr.length / 2) | 0];
-              }),
-              map(([p, onset]) => {
-                const { pitch } = cast<AudioPitchEvent>(p);
-                const { t } = cast<AudioOnsetEvent>(onset);
-                return {
-                  ...frequencyToNearestNote(pitch.frequency),
-                  clarity: pitch.clarity,
-                  age: pitch.t - t,
-                };
-              })
-            );
-          },
+          note$: (context) => analyzer$(context.analyzerEvents$),
         }),
 
         invoke: {
