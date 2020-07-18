@@ -1,8 +1,13 @@
 import { AudioRecorderEventTypes } from "../recorder";
-import { partition, PartialObserver } from "rxjs";
+import { partition, Observable } from "rxjs";
 import { AudioRecorderNode } from "../recorder/webaudio/AudioRecorderNode";
 import { AudioSynthesizer } from "../recorder/synthaudio/AudioSynthesizer";
-import { withLatestFrom, scan, map } from "rxjs/operators";
+import {
+  withLatestFrom,
+  scan,
+  map,
+  distinctUntilChanged,
+} from "rxjs/operators";
 import { cast } from "@/lib/testing/partial-impl";
 import { AudioPitchEvent, AudioOnsetEvent } from "../audio-types";
 import { frequencyToNearestNote } from "./nearestNote";
@@ -10,8 +15,8 @@ import { Note } from "@/lib/scales";
 
 type PartitionedEvents = [AudioRecorderEventTypes, AudioRecorderEventTypes];
 
-const takeLast = (N = 15) =>
-  scan<PartitionedEvents, PartitionedEvents[]>((acc, curr) => {
+const bufferLast = <T>(N = 15) =>
+  scan<T, T[]>((acc, curr) => {
     acc.push(curr);
 
     if (acc.length > N) {
@@ -42,17 +47,16 @@ const median = () =>
     return arr[(arr.length / 2) | 0];
   });
 
+type NearestNote = {
+  clarity: number;
+  age: number;
+  value: Note;
+  octave: number;
+  cents: number;
+};
+
 const nearestNote = () =>
-  map<
-    PartitionedEvents,
-    {
-      clarity: number;
-      age: number;
-      value: Note;
-      octave: number;
-      cents: number;
-    }
-  >(([p, onset]) => {
+  map<PartitionedEvents, NearestNote>(([p, onset]) => {
     const { pitch } = cast<AudioPitchEvent>(p);
     const { t } = cast<AudioOnsetEvent>(onset);
     return {
@@ -62,18 +66,28 @@ const nearestNote = () =>
     };
   });
 
-export const analyzer$ = (
-  analyzerEvents$?: AudioRecorderNode | AudioSynthesizer
+export const nearestNotes$ = (
+  analyzerEvents$: AudioRecorderNode | AudioSynthesizer
 ) => {
   const [onsets$, pitches$] = partition(
-    analyzerEvents$!,
+    analyzerEvents$,
     (e) => e.type === "onset"
   );
 
   return pitches$.pipe(
     withLatestFrom(onsets$),
-    takeLast(15),
+    bufferLast(15),
     median(),
     nearestNote()
+  );
+};
+
+export const recentDistinctNotes$ = (
+  nearestNotes$: Observable<NearestNote>,
+  N = 20
+) => {
+  return nearestNotes$.pipe(
+    distinctUntilChanged((x, y) => x.value === y.value),
+    bufferLast(N)
   );
 };
