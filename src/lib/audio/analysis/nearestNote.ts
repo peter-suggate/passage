@@ -23,11 +23,14 @@ export const frequencyToNearestNote = (
   const noteAndOctave = CONCERT_A_HALFTONE_INDEX + nearestNote;
   const nearestNoteHz = concertPitch * Math.pow(2, nearestNote / 12);
 
-  return {
+  const result = {
     value: NOTES[noteAndOctave % 12],
     octave: Math.round(noteAndOctave / 12) | 0,
     cents: 1200 * Math.log2(hz / nearestNoteHz),
   };
+
+  // console.log("result", result, "hz", hz, "nearestNoteHz", nearestNoteHz);
+  return result;
 };
 
 export const noteToFrequency = (semitonesFromConcertA: number) => {

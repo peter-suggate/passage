@@ -29,7 +29,7 @@ it("has useful initial synth config", () => {
             "mode": "major",
             "tonic": "A",
           },
-          "startOctave": 2,
+          "startOctave": 3,
         },
       },
       "node": undefined,

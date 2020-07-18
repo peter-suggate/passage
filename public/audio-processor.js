@@ -20,7 +20,9 @@ class AudioProcessor extends AudioWorkletProcessor {
 
       this.pitchDetector = this.wasmSamplesProcessor.create_pitch_detector(
         "McLeod",
-        2048
+        2048,
+        0.5,
+        0.7
       );
 
       this.port.postMessage({

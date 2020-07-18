@@ -172,7 +172,9 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
 
       const pitchDetector = wasmSamplesProcessor.create_pitch_detector(
         "McLeod",
-        2048
+        2048,
+        0.7,
+        0.5
       );
 
       if (!pitchDetector) {
