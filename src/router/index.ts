@@ -1,50 +1,40 @@
-import Vue from "vue";
-import VueRouter, { RouteConfig } from "vue-router";
-import Home from "../views/HomeView.vue";
-import { Routes } from "./Routes";
-export * from "./redirects";
+// import Vue from "vue";
+// import VueRouter, { RouteConfig } from "vue-router";
+// import Home from "../views/HomeView.vue";
+// import { Routes } from "./Routes";
 
-Vue.use(VueRouter);
+// Vue.use(VueRouter);
 
-const routes: Array<RouteConfig> = [
-  {
-    path: Routes.Home,
-    name: "HomeView",
-    component: Home,
-  },
-  // {
-  //   path: Routes.About,
-  //   name: "About",
-  //   // route level code-splitting
-  //   // this generates a separate chunk (about.[hash].js) for this route
-  //   // which is lazy-loaded when the route is visited.
-  //   component: () =>
-  //     import(/* webpackChunkName: "about" */ "../views/About.vue"),
-  // },
-  {
-    path: Routes.Setup,
-    name: "SetupView",
-    component: () => import("../views/SetupView.vue"),
-  },
-  {
-    path: Routes.ConfigureSynth,
-    name: "ConfigureSynthView",
-    component: () => import("../views/ConfigureSynthView.vue"),
-  },
-  {
-    path: Routes.Listen,
-    name: "ListenView",
-    // component: Listen,
-    component: () => import("../views/ListenView.vue"),
-  },
-];
+// const routes: Array<RouteConfig> = [
+//   {
+//     path: Routes.Home,
+//     name: "HomeView",
+//     component: Home,
+//   },
+//   {
+//     path: Routes.Setup,
+//     name: "SetupView",
+//     component: () => import("../views/SetupView.vue"),
+//   },
+//   {
+//     path: Routes.ConfigureSynth,
+//     name: "SetupSynthView",
+//     component: () => import("../views/SetupSynthView.vue"),
+//   },
+//   {
+//     path: Routes.Listen,
+//     name: "ListenView",
+//     // component: Listen,
+//     component: () => import("../views/listen/ListenView.vue"),
+//   },
+// ];
 
-const router = new VueRouter({
-  mode: "history",
-  base: process.env.BASE_URL,
-  routes,
-});
+// const router = new VueRouter({
+//   mode: "history",
+//   base: process.env.BASE_URL,
+//   routes,
+// });
 
-export default router;
+// export default router;
 
-export { Routes };
+// export { Routes };

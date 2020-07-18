@@ -31,7 +31,7 @@
 
 <script lang="ts">
 import { useService } from "@xstate/vue";
-import { AudioSetupService, AudioSetupState } from "../lib/audio/setup";
+import { AudioSetupService, AudioSetupState } from "../audioSetupService";
 import { ref } from "@vue/composition-api";
 
 type Status = {
@@ -114,7 +114,7 @@ export default {
     const status = ref(statusFromState(state.value as AudioSetupState));
 
     service.value.onTransition(e => {
-      console.warn("transition", e.value, e.context.message);
+      // console.warn("transition", e.value, e.context.message);
       status.value = statusFromState(e as AudioSetupState);
     });
 

@@ -1,6 +1,6 @@
 import { interpret } from "xstate";
-import { audioSetupMachine, AudioSetupContext } from "../audioSetupService";
 import { done } from "xstate/lib/actions";
+import { audioSetupMachine } from "@/views/setup-audio";
 
 function testMachine(optionsIn?: typeof audioSetupMachine.options.services) {
   const options = {

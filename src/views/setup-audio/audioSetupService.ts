@@ -1,7 +1,10 @@
 import { createMachine, interpret, assign, DoneInvokeEvent } from "xstate";
-import { getWebAudioMediaStream, connectAnalyzer } from "./audioSetupEffects";
-import { AudioRecorderNode } from "../recorder/webaudio/AudioRecorderNode";
 import { escalate } from "xstate/lib/actions";
+import {
+  getWebAudioMediaStream,
+  connectAnalyzer,
+} from "@/lib/audio/setup/audioSetupEffects";
+import { AudioRecorderNode } from "@/lib/audio/recorder/webaudio/AudioRecorderNode";
 
 type WebAudio = {
   media?: MediaStream;

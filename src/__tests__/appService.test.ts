@@ -1,21 +1,21 @@
-import { audioMachine, AudioServiceContext } from "../audioService";
 import { interpret } from "xstate";
-import { audioSetupMachine } from "../setup";
-import { resumeAudio, suspendAudio } from "../audioEffects";
-import { analyzerMachine } from "../analysis/analyzerService";
-import { setupSynthesizerMachine } from "../synth";
+import { appMachine, AppServiceContext } from "../appService";
+import { audioSetupMachine } from "@/views/setup-audio";
+import { resumeAudio, suspendAudio } from "@/lib/audio/audioEffects";
+import { listenMachine } from "@/views/listen/listenService";
+import { setupSynthesizerMachine } from "@/views/setup-synth";
 
-function testMachine(optionsIn?: typeof audioMachine.options.services) {
+function testMachine(optionsIn?: typeof appMachine.options.services) {
   const options = {
-    audioSetup: (context: AudioServiceContext) => audioSetupMachine,
-    resume: (context: AudioServiceContext) => resumeAudio(context.audio!),
-    suspend: (context: AudioServiceContext) => suspendAudio(context.audio!),
-    analyzer: () => analyzerMachine,
+    audioSetup: (context: AppServiceContext) => audioSetupMachine,
+    resume: (context: AppServiceContext) => resumeAudio(context.audio!),
+    suspend: (context: AppServiceContext) => suspendAudio(context.audio!),
+    analyzer: () => listenMachine,
     setupSynthesizer: () => setupSynthesizerMachine,
     ...optionsIn,
   };
 
-  return audioMachine.withConfig({
+  return appMachine.withConfig({
     services: options,
   });
 }

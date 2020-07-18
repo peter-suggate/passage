@@ -1,7 +1,10 @@
-import { createMachine, assign } from "xstate";
+import { createMachine, assign, interpret } from "xstate";
 import { escalate } from "xstate/lib/actions";
-import { SynthesizerConfig, defaultSynthConfig } from "./synth-types";
-import { AudioSynthesizer } from "../recorder/synthaudio/AudioSynthesizer";
+import {
+  SynthesizerConfig,
+  defaultSynthConfig,
+} from "@/lib/audio/synth/synth-types";
+import { AudioSynthesizer } from "@/lib/audio/recorder/synthaudio/AudioSynthesizer";
 
 export type SynthSetupContext = {
   config: SynthesizerConfig;
@@ -14,7 +17,7 @@ type Event =
   | { type: "FINISH" }
   | { type: "CANCEL" };
 
-export type SynthSetupState = {
+export type SetupSynthState = {
   context: SynthSetupContext;
 } & (
   | { value: "configure" }
@@ -27,7 +30,7 @@ export type SynthSetupState = {
 export const setupSynthesizerMachine = createMachine<
   SynthSetupContext,
   Event,
-  SynthSetupState
+  SetupSynthState
 >(
   {
     id: "SynthSetup",
@@ -99,3 +102,10 @@ export const setupSynthesizerMachine = createMachine<
     },
   }
 );
+
+export const makeSetupSynthService = () =>
+  interpret(setupSynthesizerMachine)
+    .onTransition((state) => console.log(state.value, state.context))
+    .start();
+
+export type SetupSynthService = ReturnType<typeof makeSetupSynthService>;

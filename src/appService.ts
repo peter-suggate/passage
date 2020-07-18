@@ -1,25 +1,15 @@
-import {
-  createMachine,
-  interpret,
-  assign,
-  send,
-  DoneInvokeEvent,
-} from "xstate";
+import { createMachine, interpret, assign, DoneInvokeEvent } from "xstate";
 import { fromEventPattern } from "rxjs";
 import { shareReplay } from "rxjs/operators";
-import { audioSetupMachine, AudioSetupContext } from "./setup";
-import {
-  activeNoteMachine,
-  ActiveNoteContext,
-} from "./analysis/activeNoteService";
-import { setupSynthesizerMachine } from "./synth";
-import { resumeAudio, suspendAudio } from "./audioEffects";
-import { AudioRecorderNode } from "./recorder/webaudio/AudioRecorderNode";
-import { AudioSynthesizer } from "./recorder/synthaudio/AudioSynthesizer";
-import { ANIM_CONSTANTS } from "@/transitions/constants";
-import { SynthesizerConfig } from "./synth/synth-types";
+import { listenMachine, ListenContext } from "@/views/listen/listenService";
+import { AudioRecorderNode } from "./lib/audio/recorder/webaudio/AudioRecorderNode";
+import { AudioSynthesizer } from "./lib/audio/recorder/synthaudio/AudioSynthesizer";
+import { SynthesizerConfig } from "./lib/audio/synth/synth-types";
+import { AudioSetupContext, audioSetupMachine } from "./views/setup-audio";
+import { resumeAudio, suspendAudio } from "./lib/audio/audioEffects";
+import { setupSynthesizerMachine } from "./views/setup-synth";
 
-export type AudioServiceContext = {
+export type AppServiceContext = {
   audio?: AudioContext;
   analyzer$?: AudioRecorderNode | AudioSynthesizer;
   message?: string;
@@ -33,7 +23,7 @@ type Event =
   | { type: "USE_SYNTH" }
   | { type: "USE_AUDIO" };
 
-export type AudioValidStates =
+export type AppValidStates =
   | "uninitialized"
   | "setupAudio"
   | "noWebAudio"
@@ -43,15 +33,11 @@ export type AudioValidStates =
   | "error"
   | "suspended";
 
-export type AudioState = { context: AudioServiceContext } & {
-  value: AudioValidStates;
+export type AppState = { context: AppServiceContext } & {
+  value: AppValidStates;
 };
 
-export const audioMachine = createMachine<
-  AudioServiceContext,
-  Event,
-  AudioState
->(
+export const appMachine = createMachine<AppServiceContext, Event, AppState>(
   {
     id: "Audio",
     initial: "uninitialized",
@@ -75,7 +61,7 @@ export const audioMachine = createMachine<
           onDone: {
             target: "suspended",
             actions: assign<
-              AudioServiceContext,
+              AppServiceContext,
               DoneInvokeEvent<AudioSetupContext>
             >((_, e) => ({
               message: e.data.message,
@@ -100,7 +86,7 @@ export const audioMachine = createMachine<
           },
           onError: {
             target: "error",
-            actions: assign<AudioServiceContext, any>({
+            actions: assign<AppServiceContext, any>({
               message: (_, e) => e.data,
             }),
           },
@@ -112,12 +98,10 @@ export const audioMachine = createMachine<
         invoke: {
           id: "running",
           src: "analyzer",
-          data: (context: AudioServiceContext) =>
+          data: (context: AppServiceContext) =>
             ({
               analyzerEvents$: context.analyzer$,
-              note: undefined,
-              // (context, event) => context.setup
-            } as ActiveNoteContext),
+            } as ListenContext),
         },
         on: {
           STOP: "suspending",
@@ -125,12 +109,6 @@ export const audioMachine = createMachine<
           // STOP: "transitionRunningToSuspended",
         },
       },
-
-      // transitionRunningToSuspended: {
-      //   after: {
-      //     TRANSITION_DELAY: "suspending",
-      //   },
-      // },
 
       suspending: {
         invoke: {
@@ -140,7 +118,7 @@ export const audioMachine = createMachine<
           },
           onError: {
             target: "error",
-            actions: assign<AudioServiceContext, any>({
+            actions: assign<AppServiceContext, any>({
               message: (_, e) => e.data,
             }),
           },
@@ -184,31 +162,28 @@ export const audioMachine = createMachine<
     },
   },
   {
-    delays: {
-      TRANSITION_DELAY: ANIM_CONSTANTS.routerTransitionMs,
-    },
     services: {
       audioSetup: (context, event) => audioSetupMachine,
       resume: (context) => resumeAudio(context.analyzer$!),
       suspend: (context) => suspendAudio(context.analyzer$!),
-      analyzer: (context) => activeNoteMachine,
+      analyzer: (context) => listenMachine,
       setupSynthesizer: (context) => setupSynthesizerMachine,
     },
   }
 );
 
 // Machine instance with internal state
-export const makeAudioService = () =>
-  interpret(audioMachine)
+export const makeAppService = () =>
+  interpret(appMachine)
     .onTransition((state) => console.log(state.value, state.context))
     .start();
 
-export type AudioService = ReturnType<typeof makeAudioService>;
+export type AppService = ReturnType<typeof makeAppService>;
 
 // State machine services don't give you states, but an observable of [state, event],
 // if you want to have the state only use fromEventPattern.
-export const makeAudio$ = (service: AudioService) =>
-  fromEventPattern<AudioState>(
+export const makeApp$ = (service: AppService) =>
+  fromEventPattern<AppState>(
     (handler) => {
       service
         // Listen for state transitions
@@ -219,3 +194,5 @@ export const makeAudio$ = (service: AudioService) =>
     },
     (_, service) => service.stop()
   ).pipe(shareReplay(1));
+
+export type App$ = ReturnType<typeof makeApp$>;

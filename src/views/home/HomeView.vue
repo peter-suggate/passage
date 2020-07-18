@@ -22,25 +22,27 @@
 
 <script lang="ts">
 import Vue from "vue";
-import Home from "@/components/Home.vue";
-import { audioService } from "@/lib/audio";
+import Home from "./components/Home.vue";
+import { map } from "rxjs/operators";
 import {
   fraction,
   offsetInPage,
   pageScrollY$,
   opacityFadeout,
-  scrollKeepVisible,
-  pageTop,
-  pageIndexForState,
-} from "@/transitions/page-transforms";
-import { map } from "rxjs/operators";
-import { AudioState } from "../lib/audio/audioService";
+  scrollKeepVisible
+} from "@/layouts/page-transforms";
+import { AppService } from "../../appService";
+import { navigateToActivePage } from "../../layouts/navigateToActivePage";
 
 export default Vue.extend({
   name: "HomeView",
 
+  props: {
+    appService: Object
+  },
+
   components: {
-    Home,
+    Home
   },
 
   subscriptions: function(this) {
@@ -51,7 +53,7 @@ export default Vue.extend({
           if (scrollYRelPageFrac > 0.4) {
             return {
               position: "fixed",
-              top: pageHeight * 0.05,
+              top: pageHeight * 0.05
             };
           } else {
             const offsetY = scrollKeepVisible(fraction(0.4), fraction(0.05))(
@@ -62,7 +64,7 @@ export default Vue.extend({
 
             return {
               transform: `translateY(${offsetY}px)`,
-              willChange: "transform",
+              willChange: "transform"
             };
           }
         })
@@ -75,21 +77,20 @@ export default Vue.extend({
           // Position near middle of page.
           transform: offsetInPage(fraction(0.6)),
 
-          willChange: "opacity",
+          willChange: "opacity"
         }))
-      ),
+      )
     };
   },
 
   methods: {
     begin: function() {
-      audioService.send("START");
+      const appService: AppService = this.$props.appService;
 
-      window.scroll({
-        top: pageTop(pageIndexForState(audioService.state as AudioState)),
-        behavior: "smooth",
-      });
-    },
-  },
+      appService.send("START");
+
+      navigateToActivePage(appService);
+    }
+  }
 });
 </script>

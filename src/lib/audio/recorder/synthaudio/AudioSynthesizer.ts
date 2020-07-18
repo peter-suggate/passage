@@ -1,9 +1,5 @@
 import { Subject, of, Subscription } from "rxjs";
-import {
-  AudioRecorderEventTypes,
-  AudioProcessorEventTypes,
-  Suspendable,
-} from "../recorder-types";
+import { AudioRecorderEventTypes, Suspendable } from "../recorder-types";
 import { noteToFrequency } from "@/lib/audio/analysis";
 import init, {
   AudioSamplesProcessor,

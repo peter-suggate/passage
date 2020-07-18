@@ -19,19 +19,15 @@
             @click="useAudio"
             color="primary"
             outlined
-            >Use Audio</v-btn
-          >
+          >Use Audio</v-btn>
           <v-btn
             class="ma-2"
             v-if="status.retryable"
             @click="useSynthesizer"
             color="primary"
             outlined
-            >Use synthesizer</v-btn
-          >
-          <v-btn class="ma-2" v-if="status.retryable" @click="send('RETRY')"
-            >Retry</v-btn
-          >
+          >Use synthesizer</v-btn>
+          <v-btn class="ma-2" v-if="status.retryable" @click="send('RETRY')">Retry</v-btn>
         </v-row>
       </v-col>
     </v-row>
@@ -49,15 +45,10 @@
 </style>
 
 <script lang="ts">
-import { audioService } from "../lib/audio";
-import { AudioState } from "../lib/audio/audioService";
 import { ref } from "@vue/composition-api";
 import { useService } from "@xstate/vue";
-import {
-  pageHeight,
-  pageTop,
-  pageIndexForState,
-} from "../transitions/page-transforms";
+import { AppState, AppService } from "@/appService";
+import { navigateToActivePage } from "../../../layouts/navigateToActivePage";
 
 type Status = {
   icon: "mdi-microphone" | "mdi-microphone-off" | "mdi-microphone-outline";
@@ -67,7 +58,7 @@ type Status = {
   retryable: boolean;
 };
 
-const statusFromState = (state: AudioState): Status => {
+const statusFromState = (state: AppState): Status => {
   switch (state.value) {
     case "noWebAudio":
     case "error":
@@ -76,7 +67,7 @@ const statusFromState = (state: AudioState): Status => {
         title: "No microphone",
         message:
           state.context.message || "Audio recorder not available or allowed",
-        retryable: true,
+        retryable: true
       };
     case "setupSynthesizer":
       return {
@@ -85,7 +76,7 @@ const statusFromState = (state: AudioState): Status => {
         message:
           state.context.message || "Audio recorder not available or allowed",
         useAudio: true,
-        retryable: false,
+        retryable: false
       };
     case "running":
     case "resuming":
@@ -94,38 +85,45 @@ const statusFromState = (state: AudioState): Status => {
         icon: "mdi-microphone",
         title: "Microphone found",
         message: "",
-        retryable: false,
+        retryable: false
       };
     default:
       return {
         icon: "mdi-microphone-outline",
         title: "",
         message: "",
-        retryable: false,
+        retryable: false
       };
   }
 };
 
+type Props = {
+  service: AppService;
+};
+
 export default {
-  setup() {
-    const { state, send, service } = useService(audioService);
+  props: {
+    service: Object
+  },
 
-    const audioState = state.value as AudioState;
+  setup(propsUnknown: unknown) {
+    const props = propsUnknown as Props;
 
-    const status = ref(statusFromState(audioState));
+    const { state, send, service } = useService(props.service);
 
-    service.value.onTransition((e) => {
-      status.value = statusFromState(e as AudioState);
+    const appState = state.value as AppState;
+
+    const status = ref(statusFromState(appState));
+
+    service.value.onTransition(e => {
+      status.value = statusFromState(e as AppState);
     });
 
     const useSynthesizer = () => {
       send("USE_SYNTH");
 
       setTimeout(() => {
-        window.scrollBy({
-          top: pageHeight(),
-          behavior: "smooth",
-        });
+        navigateToActivePage(service.value);
       }, 0);
     };
 
@@ -133,10 +131,7 @@ export default {
       send("USE_AUDIO");
 
       setTimeout(() => {
-        window.scroll({
-          top: pageTop(pageIndexForState(audioState)),
-          behavior: "smooth",
-        });
+        navigateToActivePage(service.value);
       }, 0);
     };
 
@@ -144,8 +139,8 @@ export default {
       send,
       status,
       useSynthesizer,
-      useAudio,
+      useAudio
     };
-  },
+  }
 };
 </script>
