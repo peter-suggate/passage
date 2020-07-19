@@ -7,11 +7,15 @@ import {
   scan,
   map,
   distinctUntilChanged,
+  filter,
 } from "rxjs/operators";
 import { cast } from "@/lib/testing/partial-impl";
 import { AudioPitchEvent, AudioOnsetEvent } from "../audio-types";
 import { frequencyToNearestNote } from "./nearestNote";
-import { Note } from "@/lib/scales";
+import { Note, integer } from "@/lib/scales";
+import { closestMatches, musicBank } from "@/lib/music-recognition";
+import { NoteDelta } from "@/lib/music-recognition/noteDeltas";
+import { PhraseBuilder } from "@/lib/music-recognition/PhraseBuilder";
 
 type PartitionedEvents = [AudioRecorderEventTypes, AudioRecorderEventTypes];
 
@@ -89,5 +93,27 @@ export const recentDistinctNotes$ = (
   return nearestNotes$.pipe(
     distinctUntilChanged((x, y) => x.value === y.value),
     bufferLast(N)
+  );
+};
+
+export const mapNotesToNoteDeltas = () =>
+  map<NearestNote[], NoteDelta[]>((notes) => {
+    return PhraseBuilder().push(
+      ...notes.map((note) => ({
+        value: note.value,
+        octave: integer(note.octave),
+      }))
+    ).noteDeltas;
+  });
+
+export const closestMatchingPieces$ = (minNotes = 5, maxMatches = 5) => (
+  recentDistinctNotes$: Observable<NearestNote[]>
+) => {
+  const pieces = musicBank();
+
+  return recentDistinctNotes$.pipe(
+    filter((notes) => notes.length >= minNotes),
+    mapNotesToNoteDeltas(),
+    map((noteDeltas) => closestMatches(noteDeltas, pieces).slice(0, maxMatches))
   );
 };

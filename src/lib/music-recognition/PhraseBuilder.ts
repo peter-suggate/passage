@@ -1,4 +1,11 @@
-import { integer, Integer, Note, PosInteger, NOTES } from "../scales";
+import {
+  integer,
+  Integer,
+  Note,
+  PosInteger,
+  NOTES,
+  OctaveNote,
+} from "../scales";
 import { noteDeltas } from "./noteDeltas";
 
 const d = (note: Note, octave = integer(0)) =>
@@ -21,8 +28,12 @@ export const PhraseBuilder = () => {
       return this;
     },
 
-    push: function(...notes: Note[]) {
-      notes.forEach((note) => _notes.push(d(note, _octave)));
+    push: function(...notes: Note[] | OctaveNote[]) {
+      notes.forEach((note: Note | OctaveNote) =>
+        typeof note === "string"
+          ? _notes.push(d(note, _octave))
+          : _notes.push(d(note.value, note.octave))
+      );
 
       return this;
     },

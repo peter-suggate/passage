@@ -3,8 +3,8 @@
     <v-row class="text-center">
       <v-col cols="12">
         <v-row justify="center">
-          <div v-for="(note, index) in recentNotes$" :key="index">
-            <h1 class="display-1">{{ note.value }}</h1>
+          <div v-for="(match, index) in closestMatchingPieces$" :key="index">
+            <h1 class="display-1">{{ match.piece.name }}</h1>
           </div>
         </v-row>
       </v-col>
@@ -31,7 +31,7 @@ export default Vue.extend({
     const service: ListenService = this.$props.service;
 
     return {
-      recentNotes$: service.state.context.recentDistinct$
+      closestMatchingPieces$: service.state.context.closestMatchingPieces$
     };
   }
 });

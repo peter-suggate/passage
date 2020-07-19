@@ -3,8 +3,9 @@
     <v-container id="triggerListen">
       <v-row class="text-center">
         <v-col v-if="listenService" class="mb-4">
-          <ActiveNote style="height: 60vh" :service="listenService" />
-          <NoteHistory style="height: 30vh" :service="listenService" />
+          <ActiveNote style="height: 40vh" :service="listenService" />
+          <NoteHistory style="height: 20vh" :service="listenService" />
+          <ClosestMatches style="height: 20vh" :service="listenService" />
           <br />
           <v-btn v-on:click="finished">Finished</v-btn>
         </v-col>
@@ -17,6 +18,7 @@
 import Vue from "vue";
 import ActiveNote from "./components/ActiveNote.vue";
 import NoteHistory from "./components/NoteHistory.vue";
+import ClosestMatches from "./components/ClosestMatches.vue";
 import { AppService } from "../../appService";
 import { ListenService } from "./listenService";
 
@@ -29,7 +31,8 @@ export default Vue.extend({
 
   components: {
     ActiveNote,
-    NoteHistory
+    NoteHistory,
+    ClosestMatches
   },
 
   data: () =>

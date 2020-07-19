@@ -66,6 +66,12 @@ export type Note =
   | "G"
   | "G#";
 
+export const note = (note: string) => {
+  return note as Note;
+};
+
+export type OctaveNote = { value: Note; octave: Integer };
+
 // export type ScaleHalftones = [Note, Note, Note, Note, Note, Note, Note];
 
 // export const SCALES: Record<"A", Note[]> = {

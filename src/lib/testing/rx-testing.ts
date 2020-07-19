@@ -19,10 +19,15 @@ export const expectEvents$ = <T, U = T>(
     (event) => {
       if (filter && !filter(event)) return;
 
+      let eventToCompare: T | unknown = event;
       if (transform) {
-        expect(transform(event)).toEqual(expected[events.length]);
+        eventToCompare = transform(event);
+      }
+
+      if (typeof eventToCompare === "object") {
+        expect(eventToCompare).toMatchObject(expected[events.length]);
       } else {
-        expect(event).toMatchObject(expected[events.length]);
+        expect(eventToCompare).toEqual(expected[events.length]);
       }
 
       events.push(event);

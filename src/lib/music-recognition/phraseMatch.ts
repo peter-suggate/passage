@@ -1,6 +1,7 @@
 import { NoteDelta } from "./noteDeltas";
 import { MusicBank } from "./musicBank";
 import { NonNegInteger, nonNegInteger } from "../scales";
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { editDistanceForClosestMatch } = require("edit-distance-search");
 
 export const phraseMatch = (
@@ -39,3 +40,5 @@ export const closestMatches = (phrase: NoteDelta[], bank: MusicBank) => {
     })
     .sort((a, b) => a.distance - b.distance);
 };
+
+export type ClosestMatches = ReturnType<typeof closestMatches>;

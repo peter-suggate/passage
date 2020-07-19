@@ -26,7 +26,7 @@ const bpmToMsPerBeat = (bpm: Bpm) => {
 export const pitchAtMs = (
   ms: number,
   config: Pick<SynthesizerConfig, "bpm" | "scaleType">,
-  memo: Map<OctavesScale, ScaleHalftone[]>
+  memo?: Map<OctavesScale, ScaleHalftone[]>
 ): number => {
   const { bpm, scaleType } = config;
 
@@ -140,7 +140,12 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
     }
   }
 
-  static async create(config: SynthesizerConfig) {
+  static async create(
+    config: SynthesizerConfig,
+    windowSamples = 2048,
+    powerThreshold = 0.9,
+    clarityThreshold = 0.75
+  ) {
     try {
       const wasmBytes = await AudioSynthesizer.fetchMusicAnalyzerWasm();
 
@@ -150,9 +155,9 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
 
       const pitchDetector = wasmSamplesProcessor.create_pitch_detector(
         "McLeod",
-        2048,
-        0.7,
-        0.5
+        windowSamples,
+        powerThreshold,
+        clarityThreshold
       );
 
       if (!pitchDetector) {

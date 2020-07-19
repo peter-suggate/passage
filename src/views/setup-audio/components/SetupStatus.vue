@@ -122,17 +122,13 @@ export default {
     const useSynthesizer = () => {
       send("USE_SYNTH");
 
-      setTimeout(() => {
-        navigateToActivePage(service.value);
-      }, 0);
+      navigateToActivePage(service.value);
     };
 
     const useAudio = () => {
       send("USE_AUDIO");
 
-      setTimeout(() => {
-        navigateToActivePage(service.value);
-      }, 0);
+      navigateToActivePage(service.value);
     };
 
     return {
