@@ -25,11 +25,10 @@ export const frequencyToNearestNote = (
 
   const result = {
     value: NOTES[noteAndOctave % 12],
-    octave: Math.round(noteAndOctave / 12) | 0,
+    octave: Math.floor(noteAndOctave / 12) | 0,
     cents: 1200 * Math.log2(hz / nearestNoteHz),
   };
 
-  // console.log("result", result, "hz", hz, "nearestNoteHz", nearestNoteHz);
   return result;
 };
 

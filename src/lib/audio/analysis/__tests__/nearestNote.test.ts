@@ -108,7 +108,7 @@ describe("frequencyToNearestNote", () => {
   it("calculates correct note value and octave for concert A", () => {
     expect(frequencyToNearestNote(440)).toEqual({
       value: "A",
-      octave: 6,
+      octave: 5,
       cents: 0,
     });
   });
@@ -116,7 +116,7 @@ describe("frequencyToNearestNote", () => {
   it("calculates correct note value and octave for a note an octave below concert A", () => {
     expect(frequencyToNearestNote(220)).toEqual({
       value: "A",
-      octave: 5,
+      octave: 4,
       cents: 0,
     });
   });
