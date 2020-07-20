@@ -2,7 +2,7 @@ import { allEvents$, expectEvents$ } from "@/lib/testing/rx-testing";
 import {
   nearestNotes$,
   recentDistinctNotes$,
-  closestMatchingPieces$
+  closestMatchingPieces$,
 } from "../analyzer";
 import { AudioSynthesizer } from "../../recorder/synthaudio/AudioSynthesizer";
 import { bpm, nonNegInteger, posInteger, Note } from "@/lib/scales";
@@ -16,8 +16,8 @@ async function majorScaleSynth(BPM = 60, windowSamples = 2048) {
       scaleType: {
         scale: { tonic: "C", mode: "major" },
         octaves: posInteger(1),
-        startOctave: nonNegInteger(4)
-      }
+        startOctave: nonNegInteger(4),
+      },
     },
     windowSamples,
     0.7,
@@ -25,105 +25,107 @@ async function majorScaleSynth(BPM = 60, windowSamples = 2048) {
   );
 }
 
-it("returns all expected notes", async done => {
-  const synth = await majorScaleSynth(60 * 4, 4096);
+it("returns all expected notes", async (done) => {
+  const NOTES_PER_SECOND = 8;
+
+  const synth = await majorScaleSynth(60 * NOTES_PER_SECOND, 1024);
 
   expect(
     allEvents$<NearestNote>(
       nearestNotes$(synth),
-      events => {
+      (events) => {
         expect(
-          events.map((e: NearestNote) => ({ note: e.value, cents: e.cents }))
+          events.map(
+            (e: NearestNote) => e.value /*({ note: e.value, cents: e.cents })*/
+          )
         ).toMatchInlineSnapshot(`
           Array [
-            Object {
-              "cents": 24.901289632674132,
-              "note": "C",
-            },
-            Object {
-              "cents": -13.869578561794148,
-              "note": "C#",
-            },
-            Object {
-              "cents": -13.869578561794148,
-              "note": "C#",
-            },
-            Object {
-              "cents": 40.5428491241758,
-              "note": "C#",
-            },
-            Object {
-              "cents": 40.5428491241758,
-              "note": "C#",
-            },
-            Object {
-              "cents": -6.938983271458416,
-              "note": "D",
-            },
-            Object {
-              "cents": -6.938983271458416,
-              "note": "D",
-            },
-            Object {
-              "cents": 3.3127191104562583,
-              "note": "D",
-            },
-            Object {
-              "cents": 3.3127191104562583,
-              "note": "D",
-            },
-            Object {
-              "cents": 0.16045109362804436,
-              "note": "D",
-            },
-            Object {
-              "cents": 0.16045109362804436,
-              "note": "D",
-            },
-            Object {
-              "cents": 4.977388848550697,
-              "note": "D",
-            },
-            Object {
-              "cents": 4.977388848550697,
-              "note": "D",
-            },
-            Object {
-              "cents": 7.22139551538934,
-              "note": "D",
-            },
-            Object {
-              "cents": 7.22139551538934,
-              "note": "D",
-            },
-            Object {
-              "cents": 1.9970813623771848,
-              "note": "D",
-            },
-            Object {
-              "cents": 0.7173095994016438,
-              "note": "D",
-            },
-            Object {
-              "cents": 6.185896071465069,
-              "note": "D",
-            },
-            Object {
-              "cents": 6.442767731055183,
-              "note": "D",
-            },
-            Object {
-              "cents": 41.87941546783418,
-              "note": "D",
-            },
-            Object {
-              "cents": 0.7867292082545221,
-              "note": "D#",
-            },
-            Object {
-              "cents": -43.29536620059206,
-              "note": "E",
-            },
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "G",
+            "A",
+            "A",
+            "A",
+            "A",
+            "A",
+            "A",
+            "A",
+            "A",
+            "A",
+            "A",
+            "A",
+            "A",
+            "A",
+            "A",
+            "A",
+            "A",
+            "A",
+            "A",
+            "A",
+            "A",
+            "A",
+            "A#",
+            "B",
+            "B",
+            "B",
+            "B",
+            "B",
+            "B",
+            "B",
+            "B",
+            "B",
+            "B",
+            "B",
+            "B",
+            "B",
+            "B",
+            "B",
+            "B",
+            "B",
+            "B",
+            "B",
+            "B",
+            "B",
+            "B",
+            "C",
+            "C",
+            "C",
+            "C",
+            "C",
+            "C",
+            "C",
+            "C",
+            "C",
+            "C",
+            "C",
+            "C",
+            "C",
+            "C",
+            "C",
+            "C",
+            "C",
+            "C",
+            "C",
           ]
         `);
       },
@@ -131,15 +133,15 @@ it("returns all expected notes", async done => {
     )
   );
 
-  synth.tick(synth.produceFrame(249));
-  synth.tick(synth.produceFrame(499));
-  synth.tick(synth.produceFrame(749));
+  for (let n = 1; n <= NOTES_PER_SECOND; n++) {
+    synth.tick(synth.produceFrame((n * 1000) / NOTES_PER_SECOND - 1));
+  }
 
   synth.complete();
 });
 
 describe("calculating N last distinct notes", () => {
-  it("ignores repeated notes", async done => {
+  it("ignores repeated notes", async (done) => {
     const synth = await majorScaleSynth();
 
     expectEvents$<NearestNote[], Note[]>(
@@ -147,7 +149,7 @@ describe("calculating N last distinct notes", () => {
       [["C"], ["C", "D"], ["C", "D", "E"], ["C", "D", "E", "F"]],
       done,
       undefined,
-      e => e.map(p => p.value)
+      (e) => e.map((p) => p.value)
     );
 
     for (let n = 1; n < 5; n++) {
@@ -155,7 +157,7 @@ describe("calculating N last distinct notes", () => {
     }
   });
 
-  it("keeps only the last N notes", async done => {
+  it("keeps only the last N notes", async (done) => {
     const synth = await majorScaleSynth();
 
     expectEvents$<NearestNote[], Note[]>(
@@ -171,11 +173,11 @@ describe("calculating N last distinct notes", () => {
         ["F", "G", "A", "B", "C"],
         ["G", "A", "B", "C", "B"],
         ["A", "B", "C", "B", "A"],
-        ["B", "C", "B", "A", "G"]
+        ["B", "C", "B", "A", "G"],
       ],
       done,
       undefined,
-      e => e.map(p => p.value)
+      (e) => e.map((p) => p.value)
     );
 
     for (let n = 1; n < 12; n++) {
@@ -185,7 +187,7 @@ describe("calculating N last distinct notes", () => {
 });
 
 describe("detecting closest music piece/scale from recorded notes", () => {
-  it("returns the correct best match after 10 notes of a major scale have been played", async done => {
+  it("returns the correct best match after 10 notes of a major scale have been played", async (done) => {
     const synth = await majorScaleSynth();
 
     const NOTES = 10;

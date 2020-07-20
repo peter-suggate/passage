@@ -83,7 +83,7 @@ class AudioProcessor extends AudioWorkletProcessor {
     if (
       this.pitchDetector &&
       ++this.iteration % iterationsPerUpdate === 0 &&
-      this.wasmSamplesProcessor.has_sufficient_samples()
+      this.wasmSamplesProcessor.has_sufficient_samples(this.pitchDetector)
     ) {
       try {
         this.wasmSamplesProcessor.set_latest_samples_on(this.pitchDetector);

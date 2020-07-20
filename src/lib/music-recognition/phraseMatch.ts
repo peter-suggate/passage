@@ -25,8 +25,10 @@ export const pieceMatch = (phrase: NoteDelta[], bank: MusicBank) => {
     { distance: nonNegInteger(phrase.length), name: "" }
   );
 
-  return closest.name;
+  return closest;
 };
+
+export type MatchedPiece = ReturnType<typeof pieceMatch>;
 
 export const closestMatches = (phrase: NoteDelta[], bank: MusicBank) => {
   return bank

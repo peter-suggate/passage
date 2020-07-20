@@ -3,7 +3,7 @@ import {
   TWINKLE,
   FRENCH_FOLK_SONG,
   musicBank,
-  MAJOR_SCALE
+  MAJOR_SCALE,
 } from "../musicBank";
 import { PhraseBuilder } from "../PhraseBuilder";
 
@@ -31,7 +31,7 @@ describe("finding closest matching piece to a phrase", () => {
       pieceMatch(
         PhraseBuilder().push("D", "E", "F#", "G").noteDeltas,
         musicBank()
-      )
+      ).name
     ).toBe("Major Scale");
   });
 
@@ -40,7 +40,7 @@ describe("finding closest matching piece to a phrase", () => {
       pieceMatch(
         PhraseBuilder().push("D", "E", "F", "G", "A", "A#").noteDeltas,
         musicBank()
-      )
+      ).name
     ).toBe("Harmonic Minor Scale");
   });
 });
@@ -51,7 +51,7 @@ describe("finding multiple closest matches", () => {
       closestMatches(
         PhraseBuilder().push("B", "A", "G", "F#", "E", "D").noteDeltas,
         musicBank()
-      ).map(val => ({ name: val.piece.name, distance: val.distance }))
+      ).map((val) => ({ name: val.piece.name, distance: val.distance }))
     ).toMatchInlineSnapshot(`
       Array [
         Object {

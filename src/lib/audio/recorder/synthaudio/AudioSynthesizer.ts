@@ -41,11 +41,18 @@ export const pitchAtMs = (
   );
 };
 
-const TWO_PI = Math.PI * 2;
-const INV_SAMPLE_RATE = 1 / 48000;
-const sinewave = (x: number, freq: number) => {
-  const fx = x * TWO_PI * freq * INV_SAMPLE_RATE;
-  return 100 * Math.sin(fx);
+const SinewaveGenerator = (sampleRate: number) => {
+  let x = 0;
+
+  const TWO_PI = Math.PI * 2;
+  const invSampleRate = 1 / sampleRate;
+
+  return {
+    next: (atFreq: number) => {
+      x += TWO_PI * atFreq * invSampleRate;
+      return Math.sin(x);
+    },
+  };
 };
 
 export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
@@ -59,8 +66,8 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
 
   prevNoteFreq = 0;
   prevNoteT = 0;
-  x = 0;
   wasmChunkBuffer = new Float32Array(AudioSynthesizer.CHUNK_SIZE);
+  sinewaveGenerator = SinewaveGenerator(AudioSynthesizer.SAMPLE_RATE);
 
   private constructor(
     private readonly config: SynthesizerConfig,
@@ -89,13 +96,22 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
   }
 
   private sendSamplesToWasm(frame: { t: number; noteFreq: number }) {
+    // console.log(
+    //   "sending samples to WASM",
+    //   "this.prevNoteT",
+    //   this.prevNoteT,
+    //   "frame.t",
+    //   frame.t,
+    //   "frame.noteFreq",
+    //   frame.noteFreq
+    // );
     const msElapsed = frame.t - this.prevNoteT;
     const chunks = Math.floor(
       (AudioSynthesizer.UPDATES_PER_SECOND * msElapsed) / 1000
     );
     for (let i = 0; i < chunks; i++) {
       for (let dx = 0; dx < AudioSynthesizer.CHUNK_SIZE; dx++)
-        this.wasmChunkBuffer[dx] = sinewave(this.x++, frame.noteFreq);
+        this.wasmChunkBuffer[dx] = this.sinewaveGenerator.next(frame.noteFreq);
       this.wasmSamplesProcessor.add_samples_chunk(this.wasmChunkBuffer);
     }
     this.prevNoteT = frame.t;
@@ -108,7 +124,7 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
   tick(frame: { t: number; noteFreq: number }) {
     this.sendSamplesToWasm(frame);
 
-    if (!this.wasmSamplesProcessor.has_sufficient_samples()) {
+    if (!this.wasmSamplesProcessor.has_sufficient_samples(this.pitchDetector)) {
       return;
     }
 
@@ -130,12 +146,17 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
           } else {
             this.next({
               type: "pitch",
-              pitch,
+              pitch: {
+                clarity: pitch.clarity,
+                frequency: pitch.frequency,
+                onset: false,
+                t: pitch.t,
+              },
             });
           }
         });
 
-        // pitches.forEach((p) => p.free());
+        pitches.forEach((p) => p.free());
       }
     }
   }
@@ -156,6 +177,7 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
       const pitchDetector = wasmSamplesProcessor.create_pitch_detector(
         "McLeod",
         windowSamples,
+        AudioSynthesizer.SAMPLE_RATE,
         powerThreshold,
         clarityThreshold
       );

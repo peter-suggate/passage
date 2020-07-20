@@ -10,14 +10,9 @@ import {
   nearestNotes$,
   recentDistinctNotes$,
   closestMatchingPieces$,
+  matchedPiece$,
 } from "@/lib/audio/analysis/analyzer";
-import { ClosestMatches } from "@/lib/music-recognition";
-
-// export type NoteInfo = {
-//   value: Note;
-//   clarity: number;
-//   age: number;
-// };
+import { ClosestMatches, MatchedPiece } from "@/lib/music-recognition";
 
 export type ListenContext = {
   // This is passed
@@ -25,6 +20,7 @@ export type ListenContext = {
   note$?: Observable<NearestNote>;
   recentDistinct$: Observable<NearestNote[]>;
   closestMatchingPieces$: Observable<ClosestMatches>;
+  matchedPiece$?: Observable<MatchedPiece>;
 };
 
 type Event =
@@ -43,6 +39,7 @@ export const listenMachine = createMachine<ListenContext, Event, ListenState>(
       note$: of({ value: "A" } as NearestNote),
       recentDistinct$: of([]),
       closestMatchingPieces$: of([]),
+      matchedPiece$: undefined,
     } as ListenContext,
     states: {
       running: {
@@ -63,18 +60,10 @@ export const listenMachine = createMachine<ListenContext, Event, ListenState>(
             MAX_MATCHES
           )(recentDistinct$);
 
-          // return {
-          //   note$: () => assign({ note$ }),
-          //   recentDistinct$: () => assign({ recentDistinct$ }),
-          // };
-
-          // return assign(() => ({
-          //   note$,
-          //   recentDistinct$,
-          // }));
           context.note$ = note$;
           context.recentDistinct$ = recentDistinct$;
           context.closestMatchingPieces$ = detectedPieces$;
+          // context.matchedPiece$ = matchedPiece$()(recentDistinct$);
           // assign<ListenContext, Event>({
           //   note$,
           //   recentDistinct$,
