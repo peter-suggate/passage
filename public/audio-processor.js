@@ -3,6 +3,19 @@ import init, {
   AudioSamplesProcessor,
 } from "./music-analyzer-wasm-rs/music_analyzer_wasm_rs.js";
 
+const SinewaveBuilder = (sampleRate) => {
+  let x = 0;
+
+  const invSampleRate = 1 / sampleRate;
+
+  return {
+    next: (atFreq) => {
+      x += 2 * Math.PI * atFreq * invSampleRate;
+      return Math.sin(x);
+    },
+  };
+};
+
 class AudioProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
@@ -10,6 +23,8 @@ class AudioProcessor extends AudioWorkletProcessor {
     this.port.onmessage = (event) => this.onmessage(event.data);
 
     this.iteration = 0;
+
+    this.sinewaveBuilder = SinewaveBuilder(sampleRate);
   }
 
   async loadWasm(wasmBytes) {
@@ -20,9 +35,10 @@ class AudioProcessor extends AudioWorkletProcessor {
 
       this.pitchDetector = this.wasmSamplesProcessor.create_pitch_detector(
         "McLeod",
-        2048,
-        0.5,
-        0.7
+        1024,
+        sampleRate,
+        0.75,
+        0.75
       );
 
       this.port.postMessage({
@@ -43,56 +59,57 @@ class AudioProcessor extends AudioWorkletProcessor {
   process(inputs, outputs) {
     // By default, the node has single input and output.
     const input = inputs[0];
-    const output = outputs[0];
 
-    const updatesPerSecond = 48000 / 128;
+    const numInputChannels = input.length;
+    if (numInputChannels < 1) {
+      return false;
+    }
+
+    const updatesPerSecond = sampleRate / 128;
     const desiredUpdatesPerSecond = updatesPerSecond;
     const iterationsPerUpdate = Math.ceil(
       updatesPerSecond / desiredUpdatesPerSecond
     );
 
-    for (let channel = 0; channel < output.length; ++channel) {
-      const inputSamples = input[channel];
-      // const outputSamples = output[channel];
+    const inputSamples = input[0];
 
-      // output[channel].set(input[channel]);
-      // inputSamples.forEach((sample, index) => {
-      //   outputSamples[index] = sample;
-      // });
+    // const output = outputs[0];
+    // output[channel].set(input[channel]);
+    // for (let dx = 0; dx < 128; dx++)
+    //   inputSamples[dx] = this.sinewaveBuilder.next(440);
 
-      this.wasmSamplesProcessor.add_samples_chunk(inputSamples);
+    this.wasmSamplesProcessor.add_samples_chunk(inputSamples);
 
-      if (
-        this.pitchDetector &&
-        ++this.iteration % iterationsPerUpdate === 0 &&
-        this.wasmSamplesProcessor.has_sufficient_samples()
-      ) {
-        try {
-          this.wasmSamplesProcessor.set_latest_samples_on(this.pitchDetector);
+    if (
+      this.pitchDetector &&
+      ++this.iteration % iterationsPerUpdate === 0 &&
+      this.wasmSamplesProcessor.has_sufficient_samples()
+    ) {
+      try {
+        this.wasmSamplesProcessor.set_latest_samples_on(this.pitchDetector);
 
-          const result = this.pitchDetector.pitches();
+        const result = this.pitchDetector.pitches();
 
-          if (result.code !== "success") {
-            console.log("error getting pitches");
-          } else {
-            const pitches = result.pitches;
-            if (pitches.length > 0) {
-              this.port.postMessage({
-                type: "pitches",
-                result: pitches.map((p) => ({
-                  frequency: p.frequency,
-                  clarity: p.clarity,
-                  t: p.t,
-                  onset: p.onset,
-                })),
-              });
+        if (result.code !== "success") {
+          console.log("error getting pitches");
+        } else {
+          const pitches = result.pitches;
+          if (pitches.length > 0) {
+            this.port.postMessage({
+              type: "pitches",
+              result: pitches.map((p) => ({
+                frequency: p.frequency,
+                clarity: p.clarity,
+                t: p.t,
+                onset: p.onset,
+              })),
+            });
 
-              pitches.forEach((p) => p.free());
-            }
+            pitches.forEach((p) => p.free());
           }
-        } catch (e) {
-          console.error(e);
         }
+      } catch (e) {
+        console.error(e);
       }
     }
 
