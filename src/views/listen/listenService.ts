@@ -1,6 +1,6 @@
 import { createMachine, assign, interpret } from "xstate";
 import { Observable, of } from "rxjs";
-import { map, filter } from "rxjs/operators";
+import { map, filter, share } from "rxjs/operators";
 import { Pitch } from "music-analyzer-wasm-rs";
 import { Note } from "@/lib/scales";
 import { AudioRecorderNode } from "@/lib/audio/recorder/webaudio/AudioRecorderNode";
@@ -51,7 +51,7 @@ export const listenMachine = createMachine<ListenContext, Event, ListenState>(
         // },
         entry: (context) => {
           const note$ = nearestNotes$(context.analyzerEvents$!);
-          const recentDistinct$ = recentDistinctNotes$(note$);
+          const recentDistinct$ = recentDistinctNotes$(note$).pipe(share());
 
           const MIN_NOTES_BEFORE_ATTEMPT_MATCH = 5;
           const MAX_MATCHES = 5;

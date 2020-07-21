@@ -11,6 +11,7 @@ import {
   // bufferCount,
   pairwise,
   flatMap,
+  bufferCount,
 } from "rxjs/operators";
 import { cast } from "@/lib/testing/partial-impl";
 import { AudioPitchEvent, AudioOnsetEvent } from "../audio-types";
@@ -129,8 +130,12 @@ export const recentDistinctNotes$ = (
   N = 20
 ) => {
   return nearestNotes$.pipe(
-    pairwise(),
-    filter((pair) => pair[1].value === pair[0].value),
+    bufferCount(3),
+    filter(
+      (triple) =>
+        triple[0].value === triple[1].value &&
+        triple[1].value === triple[2].value
+    ),
     map((pair) => pair[0]),
     distinctUntilChanged((x, y) => x.value === y.value),
     bufferLast(N)
