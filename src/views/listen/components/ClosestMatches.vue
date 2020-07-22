@@ -31,7 +31,8 @@ export default Vue.extend({
     const service: ListenService = this.$props.service;
 
     return {
-      closestMatchingPieces$: service.state.context.closestMatchingPieces$
+      closestMatchingPieces$:
+        service.state.context.observables.closestMatchingPieces$
     };
   }
 });

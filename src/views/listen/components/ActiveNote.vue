@@ -67,7 +67,7 @@ export default Vue.extend({
     const service: ListenService = this.$props.service;
 
     return {
-      note$: service.state.context.note$!
+      note$: service.state.context.observables.note$
     };
   }
 });

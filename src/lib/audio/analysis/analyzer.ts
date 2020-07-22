@@ -1,16 +1,11 @@
 import { AudioRecorderEventTypes } from "../recorder";
-import { partition, Observable, pipe } from "rxjs";
-import { AudioRecorderNode } from "../recorder/webaudio/AudioRecorderNode";
-import { AudioSynthesizer } from "../recorder/synthaudio/AudioSynthesizer";
+import { partition, Observable } from "rxjs";
 import {
   withLatestFrom,
   scan,
   map,
   distinctUntilChanged,
   filter,
-  // bufferCount,
-  pairwise,
-  flatMap,
   bufferCount,
 } from "rxjs/operators";
 import { cast } from "@/lib/testing/partial-impl";
@@ -22,18 +17,6 @@ import { NoteDelta } from "@/lib/music-recognition/noteDeltas";
 import { PhraseBuilder } from "@/lib/music-recognition/PhraseBuilder";
 
 type PartitionedEvents = [AudioRecorderEventTypes, AudioRecorderEventTypes];
-
-// const skipTransitionsBetweenDifferentPitches = () =>
-//   pipe(
-//     pairwise<AudioPitchEvent>(),
-//     flatMap((pair) => {
-//       const delta = pair[1].pitch.frequency / pair[0].pitch.frequency;
-//       // if (delta >= 1.05946 || delta < 1 / 1.05946) {
-//       //   return [];
-//       // }
-//       return [pair[0]];
-//     })
-//   );
 
 /**
  * Collects the last N events into an array, maintaining the last N events.
@@ -92,7 +75,7 @@ const nearestNote = () =>
   });
 
 export const nearestNotes$ = (
-  analyzerEvents$: AudioRecorderNode | AudioSynthesizer
+  analyzerEvents$: Observable<AudioRecorderEventTypes>
 ) => {
   const [onsets$, pitches$] = partition(
     analyzerEvents$,
@@ -100,24 +83,6 @@ export const nearestNotes$ = (
   );
 
   return cast<Observable<AudioPitchEvent>>(pitches$).pipe(
-    // pairwise<AudioPitchEvent>(),
-    // filter((pair) => {
-    //   const delta = pair[1].pitch.frequency / pair[0].pitch.frequency;
-    //   // console.log(pair[1].pitch.frequency, pair[0].pitch.frequency, delta);
-    //   if (delta >= 1.04 /*1.05946*/ || delta < 0.965 /*1 / 1.05946*/) {
-    //     return false;
-    //   }
-    //   return true;
-    // }),
-    // map((pair) => pair[0]),
-    // flatMap((pair) => {
-    //   const delta = pair[1].pitch.frequency / pair[0].pitch.frequency;
-    //   if (delta >= 1.05946 || delta < 1 / 1.05946) {
-    //     return [];
-    //   }
-    //   return [pair[0]];
-    // }),
-    // skipTransitionsBetweenDifferentPitches(),
     withLatestFrom(onsets$),
     bufferLast(5),
     median(),

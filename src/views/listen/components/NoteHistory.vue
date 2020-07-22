@@ -3,7 +3,7 @@
     <v-row class="text-center">
       <v-col cols="12">
         <v-row justify="center">
-          <div v-for="(note, index) in recentNotes$" :key="index">
+          <div v-for="(note, index) in recentDistinctNotes$" :key="index">
             <h1 class="display-1">{{ note.value }}</h1>
           </div>
         </v-row>
@@ -31,7 +31,8 @@ export default Vue.extend({
     const service: ListenService = this.$props.service;
 
     return {
-      recentNotes$: service.state.context.recentDistinct$
+      recentDistinctNotes$:
+        service.state.context.observables.recentDistinctNotes$
     };
   }
 });

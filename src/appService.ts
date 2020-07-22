@@ -1,7 +1,7 @@
 import { createMachine, interpret, assign, DoneInvokeEvent } from "xstate";
 import { fromEventPattern } from "rxjs";
 import { shareReplay } from "rxjs/operators";
-import { listenMachine, ListenContext } from "@/views/listen/listenService";
+import { listenMachine, initListenContext } from "@/views/listen/listenService";
 import { AudioRecorderNode } from "./lib/audio/recorder/webaudio/AudioRecorderNode";
 import { AudioSynthesizer } from "./lib/audio/recorder/synthaudio/AudioSynthesizer";
 import { SynthesizerConfig } from "./lib/audio/synth/synth-types";
@@ -97,11 +97,9 @@ export const appMachine = createMachine<AppServiceContext, Event, AppState>(
       running: {
         invoke: {
           id: "running",
-          src: "analyzer",
+          src: "listen",
           data: (context: AppServiceContext) =>
-            ({
-              analyzerEvents$: context.analyzer$,
-            } as ListenContext),
+            initListenContext(context.analyzer$!),
         },
         on: {
           STOP: "suspending",
@@ -166,7 +164,7 @@ export const appMachine = createMachine<AppServiceContext, Event, AppState>(
       audioSetup: (context, event) => audioSetupMachine,
       resume: (context) => resumeAudio(context.analyzer$!),
       suspend: (context) => suspendAudio(context.analyzer$!),
-      analyzer: (context) => listenMachine,
+      listen: (context) => listenMachine,
       setupSynthesizer: (context) => setupSynthesizerMachine,
     },
   }
