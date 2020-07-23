@@ -11,6 +11,8 @@ import {
   initPracticePieces,
 } from "@/lib/audio/analysis/practice-pieces";
 import { Piece } from "@/lib/music-recognition";
+import { nearestNotes$ } from "@/lib/audio/analysis";
+import { map } from "rxjs/operators";
 
 export type ListenContext = {
   observables: ListenObservables;
@@ -20,7 +22,7 @@ export type ListenContext = {
 export const initListenContext = (
   recorderEvents$: Observable<AudioRecorderEventTypes>
 ): ListenContext => ({
-  observables: listenObservables(recorderEvents$!),
+  observables: listenObservables(nearestNotes$(recorderEvents$!)),
   pieces: initPracticePieces(),
 });
 
@@ -38,6 +40,16 @@ export const listenMachine = createMachine<ListenContext, Event, ListenState>(
     initial: "detecting",
     states: {
       detecting: {
+        invoke: {
+          src: (context) =>
+            context.observables.matchedPiece$.pipe(
+              map((piece) => ({
+                type: "PIECE_DETECTED",
+                piece,
+              }))
+            ),
+          onDone: "finished",
+        },
         on: {
           PIECE_DETECTED: {
             target: "piece",

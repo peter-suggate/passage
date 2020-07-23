@@ -43,45 +43,41 @@ export default Vue.extend({
   created() {
     const listenService: ListenService = this.$props.listenService;
 
-    listenService.onTransition(state => {
-      switch (state.value) {
-        case "running":
-          this.piecePracticeService = (appService.children.get(
-            "running"
-          ) as unknown) as ListenService;
-          break;
-        default:
-          this.listenService = undefined;
-          break;
-      }
-    });
+    // listenService.onTransition(state => {
+    //   switch (state.value) {
+    //     case "running":
+    //       this.piecePracticeService = (appService.children.get(
+    //         "running"
+    //       ) as unknown) as ListenService;
+    //       break;
+    //     default:
+    //       this.listenService = undefined;
+    //       break;
+    //   }
+    // });
   },
 
   mounted() {
-    const appService: AppService = this.$props.appService;
-
-    const callback: IntersectionObserverCallback = entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          appService.send("RESUME");
-        }
-      });
-    };
-
-    this.observer = new IntersectionObserver(callback, {
-      root: null,
-      threshold: 0.5
-    });
-
-    const target = document.querySelector("#triggerListen");
-    if (target) this.observer.observe(target);
+    // const appService: AppService = this.$props.appService;
+    // const callback: IntersectionObserverCallback = entries => {
+    //   entries.forEach(entry => {
+    //     if (entry.isIntersecting) {
+    //       appService.send("RESUME");
+    //     }
+    //   });
+    // };
+    // this.observer = new IntersectionObserver(callback, {
+    //   root: null,
+    //   threshold: 0.5
+    // });
+    // const target = document.querySelector("#triggerListen");
+    // if (target) this.observer.observe(target);
   },
 
   methods: {
     finished: function() {
-      const appService: AppService = this.$props.appService;
-
-      appService.send("STOP");
+      // const appService: AppService = this.$props.appService;
+      // appService.send("STOP");
     }
   }
 });

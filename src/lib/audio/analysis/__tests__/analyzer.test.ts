@@ -3,10 +3,10 @@ import {
   nearestNotes$,
   recentDistinctNotes$,
   closestMatchingPieces$,
+  NearestNote,
 } from "../analyzer";
 import { AudioSynthesizer } from "../../recorder/synthaudio/AudioSynthesizer";
 import { bpm, nonNegInteger, posInteger, Note } from "@/lib/scales";
-import { NearestNote } from "../nearestNote";
 
 async function majorScaleSynth(BPM = 60, windowSamples = 2048) {
   return await AudioSynthesizer.create(

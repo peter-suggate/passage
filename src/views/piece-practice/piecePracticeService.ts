@@ -26,12 +26,9 @@ export type PiecePracticeContext = {
 type Event =
   | { type: "PLAYER_STOPPED" }
   | { type: "NOTE_PLAYED_AFTER_LONG_PAUSE" }
-  | { type: "LAST_NOTE_PLAYED" };
+  | { type: "LAST_PIECE_NOTE_PLAYED" };
 
-type ValidPiecePracticeStates =
-  | "initialPlaythrough"
-  | "sectionPractice"
-  | "waiting";
+type ValidPiecePracticeStates = "sectionPractice" | "waiting";
 
 export type PiecePracticeState = {
   context: PiecePracticeContext;
@@ -44,22 +41,14 @@ export const piecePracticeMachine = createMachine<
 >(
   {
     id: "PiecePractice",
-    initial: "initialPlaythrough",
+    initial: "sectionPractice",
     states: {
-      initialPlaythrough: {
-        on: {
-          LAST_NOTE_PLAYED: {
-            target: "waiting",
-          },
-          PLAYER_STOPPED: {
-            target: "waiting",
-          },
-        },
-      },
-
       sectionPractice: {
+        // invoke: {
+        //   src: (context) => context.observables.
+        // },
         on: {
-          LAST_NOTE_PLAYED: {
+          LAST_PIECE_NOTE_PLAYED: {
             target: "waiting",
           },
           PLAYER_STOPPED: {
@@ -87,10 +76,10 @@ export const piecePracticeMachine = createMachine<
   }
 );
 
-// // Machine instance with internal state
-// export const makePiecePracticeService = () =>
-//   interpret(piecePracticeMachine)
-//     .onTransition((state) => console.log(state.value, state.context))
-//     .start();
+// Machine instance with internal state
+export const makePiecePracticeService = () =>
+  interpret(piecePracticeMachine)
+    .onTransition((state) => console.log(state.value, state.context))
+    .start();
 
-// export type PiecePracticeService = ReturnType<typeof makePiecePracticeService>;
+export type PiecePracticeService = ReturnType<typeof makePiecePracticeService>;

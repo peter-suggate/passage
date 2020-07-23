@@ -55,11 +55,11 @@ const median = () =>
     return arr[(arr.length / 2) | 0];
   });
 
-type NearestNote = {
+export type NearestNote = {
   clarity: number;
-  age: number;
   value: Note;
   octave: number;
+  age: number;
   cents: number;
 };
 
@@ -144,8 +144,8 @@ export const matchedPiece$ = (minNotes = 10, maxEditDistance = 3) => (
   return recentDistinctNotes$.pipe(
     filter((notes) => notes.length >= minNotes),
     mapNotesToNoteDeltas(),
-    map((noteDeltas) => pieceMatch(noteDeltas, pieces))
+    map((noteDeltas) => pieceMatch(noteDeltas, pieces)),
     // Only return match if it's good.
-    // filter((closest) => closest.distance <= maxEditDistance)
+    filter((closest) => closest.distance <= maxEditDistance)
   );
 };

@@ -7,6 +7,7 @@ import {
   matchedPiece$,
 } from "@/lib/audio/analysis/analyzer";
 import { share } from "rxjs/operators";
+import { NearestNote } from "@/lib/audio/analysis";
 
 /**
  * From pitch events produced by the recorder, returns all the observables needed in
@@ -15,10 +16,12 @@ import { share } from "rxjs/operators";
  * @param events$ Observable of audio events produced by the recorder.
  */
 export const listenObservables = (
-  recordedEvents$: Observable<AudioRecorderEventTypes>
+  note$: Observable<NearestNote>
+  // note$ = nearestNotes$(recordedEvents$);
+  // recordedEvents$: Observable<AudioRecorderEventTypes>
 ) => {
   // Convert pitch frequencies to closest notes.
-  const note$ = nearestNotes$(recordedEvents$);
+  // const note$ = nearestNotes$(recordedEvents$);
 
   // Buffer the last N distinct notes.
   const recentDistinct$ = recentDistinctNotes$(note$).pipe(share());

@@ -1,12 +1,9 @@
 import { expectEvents$ } from "../../../testing/rx-testing";
 import { of } from "rxjs";
 import { AudioOnsetEvent, AudioPitchEvent } from "../../audio-types";
-import {
-  activeNote$,
-  frequencyToNearestNote,
-  NearestNote,
-} from "../nearestNote";
+import { activeNote$, frequencyToNearestNote } from "../nearestNote";
 import { noteToFrequency } from "..";
+import { NearestNote } from "../analyzer";
 
 function pitchEvent(frequency: number = 440): AudioPitchEvent {
   return {

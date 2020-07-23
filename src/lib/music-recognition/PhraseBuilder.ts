@@ -46,6 +46,10 @@ export const PhraseBuilder = () => {
       return this;
     },
 
+    get noteNames() {
+      return _notes.map((value) => NOTES[value]);
+    },
+
     get noteDeltas() {
       return noteDeltas(_notes);
     },

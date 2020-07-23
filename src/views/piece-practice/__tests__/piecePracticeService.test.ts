@@ -2,8 +2,20 @@ import {
   piecePracticeMachine,
   initPiecePracticeContext,
 } from "../piecePracticeService";
-import { musicBank } from "@/lib/music-recognition";
+import { TWINKLE } from "@/lib/music-recognition";
 import { listenObservables } from "@/views/listen/listenObservables";
+import { NearestNote } from "@/lib/audio/analysis";
+import { Note, note } from "@/lib/scales";
+import { of } from "rxjs";
+import { initPracticePiece } from "@/lib/audio/analysis/practice-pieces";
+
+const testNote = (note: Note): NearestNote => ({
+  age: 0,
+  cents: 0,
+  clarity: 1.0,
+  value: note,
+  octave: 4,
+});
 
 function testMachine(optionsIn?: typeof piecePracticeMachine.options.services) {
   const options = {
@@ -14,17 +26,27 @@ function testMachine(optionsIn?: typeof piecePracticeMachine.options.services) {
     .withConfig({
       services: options,
     })
-    .withContext(initPiecePracticeContext(musicBank()[0], listenObservables()));
+    .withContext(
+      initPiecePracticeContext(
+        {
+          name: "Twinkle",
+          notes: TWINKLE.noteDeltas,
+        },
+        listenObservables(of(...TWINKLE.noteNames.map((n) => testNote(n))))
+      )
+    );
 
   return service;
 }
 
-it("begins at the initial play through", () => {
+it("begins at the section practice", () => {
   const machine = testMachine();
 
   expect(machine.initialState.value).toBe("initialPlaythrough");
 
-  expect(machine.context).toBe({});
+  expect(machine.context!.piece.piece.name).toBe("Twinkle");
+
+  expect(machine.context!.piece.sections.length).toBe(0);
 });
 
 // it("initially has no completed practice sections", () => {
@@ -36,7 +58,10 @@ it("begins at the initial play through", () => {
 // });
 
 // describe('when initial play through is finished', () => {
+//   it('transitions to waiting', () => {
+//     const machine = testMachine();
 
+//   });
 // });
 
 // it("is at initial play through when created", () => {

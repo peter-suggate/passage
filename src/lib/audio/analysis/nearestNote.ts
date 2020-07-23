@@ -9,7 +9,7 @@ import {
   CONCERT_A_HALFTONE_INDEX,
 } from "@/lib/scales";
 
-export type NearestNote = {
+type NearestNote = {
   value: Note;
   octave: number;
   cents: number;
