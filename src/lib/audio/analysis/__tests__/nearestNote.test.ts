@@ -3,7 +3,7 @@ import { of } from "rxjs";
 import { AudioOnsetEvent, AudioPitchEvent } from "../../audio-types";
 import { activeNote$, frequencyToNearestNote } from "../nearestNote";
 import { noteToFrequency } from "..";
-import { NearestNote } from "../analyzer";
+import { NearestNote } from "../analysis-types";
 
 function pitchEvent(frequency: number = 440): AudioPitchEvent {
   return {

@@ -11,10 +11,8 @@ import {
 import { cast } from "@/lib/testing/partial-impl";
 import { AudioPitchEvent, AudioOnsetEvent } from "../audio-types";
 import { frequencyToNearestNote } from "./nearestNote";
-import { Note, integer } from "@/lib/scales";
-import { closestMatches, musicBank, pieceMatch } from "@/lib/music-recognition";
-import { NoteDelta } from "@/lib/music-recognition/noteDeltas";
-import { PhraseBuilder } from "@/lib/music-recognition/PhraseBuilder";
+import { Note } from "@/lib/scales";
+import { NearestNote } from "./analysis-types";
 
 type PartitionedEvents = [AudioRecorderEventTypes, AudioRecorderEventTypes];
 
@@ -54,14 +52,6 @@ const median = () =>
     // );
     return arr[(arr.length / 2) | 0];
   });
-
-export type NearestNote = {
-  clarity: number;
-  value: Note;
-  octave: number;
-  age: number;
-  cents: number;
-};
 
 const nearestNote = () =>
   map<PartitionedEvents, NearestNote>(([p, onset]) => {
@@ -104,48 +94,5 @@ export const recentDistinctNotes$ = (
     map((pair) => pair[0]),
     distinctUntilChanged((x, y) => x.value === y.value),
     bufferLast(N)
-  );
-};
-
-export const mapNotesToNoteDeltas = () =>
-  map<NearestNote[], NoteDelta[]>((notes) => {
-    return PhraseBuilder().push(
-      ...notes.map((note) => ({
-        value: note.value,
-        octave: integer(note.octave),
-      }))
-    ).noteDeltas;
-  });
-
-export const closestMatchingPieces$ = (minNotes = 5, maxMatches = 5) => (
-  recentDistinctNotes$: Observable<NearestNote[]>
-) => {
-  const pieces = musicBank();
-
-  return recentDistinctNotes$.pipe(
-    filter((notes) => notes.length >= minNotes),
-    mapNotesToNoteDeltas(),
-    map((noteDeltas) => closestMatches(noteDeltas, pieces).slice(0, maxMatches))
-  );
-};
-
-/**
- * Return best matching piece so long as a minimum number of notes have been
- * sampled and the match criteria reaches a certain threshold.
- *
- * @param minNotes Minimum notes required before an event can possibly be emitted.
- * @param maxEditDistance The maximum allowed deviation from a perfect match.
- */
-export const matchedPiece$ = (minNotes = 10, maxEditDistance = 3) => (
-  recentDistinctNotes$: Observable<NearestNote[]>
-) => {
-  const pieces = musicBank();
-
-  return recentDistinctNotes$.pipe(
-    filter((notes) => notes.length >= minNotes),
-    mapNotesToNoteDeltas(),
-    map((noteDeltas) => pieceMatch(noteDeltas, pieces)),
-    // Only return match if it's good.
-    filter((closest) => closest.distance <= maxEditDistance)
   );
 };

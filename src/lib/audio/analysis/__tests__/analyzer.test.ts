@@ -1,29 +1,8 @@
 import { allEvents$, expectEvents$ } from "@/lib/testing/rx-testing";
-import {
-  nearestNotes$,
-  recentDistinctNotes$,
-  closestMatchingPieces$,
-  NearestNote,
-} from "../analyzer";
-import { AudioSynthesizer } from "../../recorder/synthaudio/AudioSynthesizer";
-import { bpm, nonNegInteger, posInteger, Note } from "@/lib/scales";
-
-async function majorScaleSynth(BPM = 60, windowSamples = 2048) {
-  return await AudioSynthesizer.create(
-    {
-      bpm: bpm(BPM),
-      instrument: "bell",
-      scaleType: {
-        scale: { tonic: "C", mode: "major" },
-        octaves: posInteger(1),
-        startOctave: nonNegInteger(5),
-      },
-    },
-    windowSamples,
-    0.7,
-    0.75
-  );
-}
+import { nearestNotes$, recentDistinctNotes$ } from "../analyzer";
+import { Note } from "@/lib/scales";
+import { majorScaleSynth } from "../../synth/testing";
+import { NearestNote } from "../analysis-types";
 
 it("returns all expected notes", async (done) => {
   const NOTES_PER_SECOND = 15;
@@ -129,29 +108,6 @@ describe("calculating N last distinct notes", () => {
 
     for (let n = 1; n <= NOTES_PER_SECOND; n++) {
       synth.tick(synth.produceFrame((n * 1000) / NOTES_PER_SECOND - 1));
-    }
-  });
-});
-
-describe("detecting closest music piece/scale from recorded notes", () => {
-  it("returns the correct best match after 10 notes of a major scale have been played", async (done) => {
-    const synth = await majorScaleSynth();
-
-    const NOTES = 10;
-    const MIN_NOTES = NOTES;
-    const MAX_MATCHES = 1;
-
-    expectEvents$(
-      closestMatchingPieces$(
-        MIN_NOTES,
-        MAX_MATCHES
-      )(recentDistinctNotes$(nearestNotes$(synth), NOTES)),
-      [[{ piece: { name: "Major Scale" }, distance: 0 }]],
-      done
-    );
-
-    for (let n = 1; n < NOTES + 1; n++) {
-      synth.tick(synth.produceFrame(n * 1000 - 1));
     }
   });
 });

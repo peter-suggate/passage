@@ -1,13 +1,11 @@
 import { Observable } from "rxjs";
-import { AudioRecorderEventTypes } from "@/lib/audio/recorder";
-import {
-  nearestNotes$,
-  recentDistinctNotes$,
-  closestMatchingPieces$,
-  matchedPiece$,
-} from "@/lib/audio/analysis/analyzer";
+import { recentDistinctNotes$ } from "@/lib/audio/analysis/analyzer";
 import { share } from "rxjs/operators";
 import { NearestNote } from "@/lib/audio/analysis";
+import {
+  closestMatchingPieces$,
+  matchedPiece$,
+} from "@/lib/music-recognition/observables";
 
 /**
  * From pitch events produced by the recorder, returns all the observables needed in
