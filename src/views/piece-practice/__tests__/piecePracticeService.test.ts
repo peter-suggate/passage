@@ -11,6 +11,7 @@ import { initPracticePiece } from "@/lib/audio/analysis/practice-pieces";
 
 const testNote = (note: Note): NearestNote => ({
   age: 0,
+  t: 9,
   cents: 0,
   clarity: 1.0,
   value: note,

@@ -5,14 +5,13 @@ import {
   scan,
   map,
   distinctUntilChanged,
-  filter,
-  bufferCount,
 } from "rxjs/operators";
 import { cast } from "@/lib/testing/partial-impl";
 import { AudioPitchEvent, AudioOnsetEvent } from "../audio-types";
 import { frequencyToNearestNote } from "./nearestNote";
-import { Note } from "@/lib/scales";
 import { NearestNote } from "./analysis-types";
+import { filterInBetweenNotes } from "./analysis-operators";
+import { posInteger } from "@/lib/scales";
 
 type PartitionedEvents = [AudioRecorderEventTypes, AudioRecorderEventTypes];
 
@@ -21,7 +20,7 @@ type PartitionedEvents = [AudioRecorderEventTypes, AudioRecorderEventTypes];
  *
  * @param N The number of events to buffer
  */
-const bufferLast = <T>(N = 5) =>
+const bufferLast = <T>(N = posInteger(5)) =>
   scan<T, T[]>((acc, curr) => {
     acc.push(curr);
 
@@ -60,6 +59,7 @@ const nearestNote = () =>
     return {
       ...frequencyToNearestNote(pitch.frequency),
       clarity: pitch.clarity,
+      t: pitch.t,
       age: pitch.t - t,
     };
   });
@@ -74,24 +74,25 @@ export const nearestNotes$ = (
 
   return cast<Observable<AudioPitchEvent>>(pitches$).pipe(
     withLatestFrom(onsets$),
-    bufferLast(5),
+    bufferLast(posInteger(5)),
     median(),
     nearestNote()
   );
 };
 
+export const distinctNotes$ = (nearestNotes$: Observable<NearestNote>) => {
+  return nearestNotes$.pipe(
+    filterInBetweenNotes(),
+    distinctUntilChanged((x, y) => x.value === y.value)
+  );
+};
+
 export const recentDistinctNotes$ = (
   nearestNotes$: Observable<NearestNote>,
-  N = 20
+  N = posInteger(20)
 ) => {
   return nearestNotes$.pipe(
-    bufferCount(3),
-    filter(
-      (triple) =>
-        triple[0].value === triple[1].value &&
-        triple[1].value === triple[2].value
-    ),
-    map((pair) => pair[0]),
+    filterInBetweenNotes(),
     distinctUntilChanged((x, y) => x.value === y.value),
     bufferLast(N)
   );

@@ -1,8 +1,9 @@
 import { allEvents$, expectEvents$ } from "@/lib/testing/rx-testing";
 import { nearestNotes$, recentDistinctNotes$ } from "../analyzer";
-import { Note } from "@/lib/scales";
+import { Note, posNumber, posInteger } from "@/lib/scales";
 import { majorScaleSynth } from "../../synth/testing";
 import { NearestNote } from "../analysis-types";
+import { recentDistinctNotesByTime$ } from "../analysis-observables";
 
 it("returns all expected notes", async (done) => {
   const NOTES_PER_SECOND = 15;
@@ -35,7 +36,7 @@ describe("calculating N last distinct notes", () => {
     const synth = await majorScaleSynth();
 
     expectEvents$<NearestNote[], Note[]>(
-      recentDistinctNotes$(nearestNotes$(synth), 5),
+      recentDistinctNotes$(nearestNotes$(synth), posInteger(5)),
       [["C"], ["C", "D"], ["C", "D", "E"], ["C", "D", "E", "F"]],
       done,
       undefined,
@@ -51,7 +52,7 @@ describe("calculating N last distinct notes", () => {
     const synth = await majorScaleSynth();
 
     expectEvents$<NearestNote[], Note[]>(
-      recentDistinctNotes$(nearestNotes$(synth), 5),
+      recentDistinctNotes$(nearestNotes$(synth), posInteger(5)),
       [
         ["C"],
         ["C", "D"],
@@ -82,7 +83,95 @@ describe("calculating N last distinct notes", () => {
 
     expect(
       expectEvents$<NearestNote[], Note[]>(
-        recentDistinctNotes$(nearestNotes$(synth), 5),
+        recentDistinctNotes$(nearestNotes$(synth), posInteger(5)),
+        [
+          ["C"],
+          ["C", "D"],
+          ["C", "D", "E"],
+          ["C", "D", "E", "F"],
+          ["C", "D", "E", "F", "G"],
+          ["D", "E", "F", "G", "A"],
+          ["E", "F", "G", "A", "B"],
+          ["F", "G", "A", "B", "C"],
+          ["G", "A", "B", "C", "B"],
+          ["A", "B", "C", "B", "A"],
+          ["B", "C", "B", "A", "G"],
+          ["C", "B", "A", "G", "F"],
+          ["B", "A", "G", "F", "E"],
+          ["A", "G", "F", "E", "D"],
+          ["G", "F", "E", "D", "C"],
+        ],
+        done,
+        undefined,
+        (e) => e.map((p) => p.value)
+      )
+    );
+
+    for (let n = 1; n <= NOTES_PER_SECOND; n++) {
+      synth.tick(synth.produceFrame((n * 1000) / NOTES_PER_SECOND - 1));
+    }
+  });
+});
+
+describe("filtering notes to those within most recent N seconds", () => {
+  it.only("returns first event for very small window length", async (done) => {
+    const bpm = 60;
+    const synth = await majorScaleSynth(bpm);
+
+    expectEvents$<NearestNote[], Note[]>(
+      recentDistinctNotesByTime$(nearestNotes$(synth), posNumber(1)),
+      [
+        ["C"],
+        ["C"], // Next note in scale didn't fit inside the window.
+      ],
+      done,
+      undefined,
+      (e) => e.map((p) => p.value)
+    );
+
+    // Produce first note.
+    synth.tick(synth.produceFrame(999));
+
+    // Produce second note.
+    synth.tick(synth.produceFrame(1999));
+  });
+
+  it("keeps only the last N notes", async (done) => {
+    const synth = await majorScaleSynth();
+
+    expectEvents$<NearestNote[], Note[]>(
+      recentDistinctNotes$(nearestNotes$(synth), posInteger(5)),
+      [
+        ["C"],
+        ["C", "D"],
+        ["C", "D", "E"],
+        ["C", "D", "E", "F"],
+        ["C", "D", "E", "F", "G"],
+        ["D", "E", "F", "G", "A"],
+        ["E", "F", "G", "A", "B"],
+        ["F", "G", "A", "B", "C"],
+        ["G", "A", "B", "C", "B"],
+        ["A", "B", "C", "B", "A"],
+        ["B", "C", "B", "A", "G"],
+      ],
+      done,
+      undefined,
+      (e) => e.map((p) => p.value)
+    );
+
+    for (let n = 1; n < 12; n++) {
+      synth.tick(synth.produceFrame(n * 1000 - 1));
+    }
+  });
+
+  it("removes gliding / passing notes because they interfere with music recognition", async (done) => {
+    const NOTES_PER_SECOND = 15;
+
+    const synth = await majorScaleSynth(60 * NOTES_PER_SECOND, 1024);
+
+    expect(
+      expectEvents$<NearestNote[], Note[]>(
+        recentDistinctNotes$(nearestNotes$(synth), posInteger(5)),
         [
           ["C"],
           ["C", "D"],

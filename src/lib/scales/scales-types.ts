@@ -35,6 +35,15 @@ export const nonNegInteger = (value: number): NonNegInteger => {
   return (value | 0) as NonNegInteger;
 };
 
+export type PosNumber = Opaque<"PosNumber", number>;
+
+export const posNumber = (value: number): PosNumber => {
+  if (value <= 0)
+    throw Error("Positive numbers must be greater than 0, got: " + value);
+
+  return value as PosNumber;
+};
+
 export type ScaleHalftone = Opaque<"ScaleTone", number>;
 
 export const scaleHalftone = (

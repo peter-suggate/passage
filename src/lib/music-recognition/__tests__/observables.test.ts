@@ -2,12 +2,13 @@ import { majorScaleSynth } from "@/lib/audio/synth/testing";
 import { expectEvents$ } from "@/lib/testing/rx-testing";
 import { recentDistinctNotes$, nearestNotes$ } from "@/lib/audio/analysis";
 import { closestMatchingPieces$ } from "../observables";
+import { posInteger } from "@/lib/scales";
 
 describe("detecting closest music piece/scale from recorded notes", () => {
   it("returns the correct best match after 10 notes of a major scale have been played", async (done) => {
     const synth = await majorScaleSynth();
 
-    const NOTES = 10;
+    const NOTES = posInteger(10);
     const MIN_NOTES = NOTES;
     const MAX_MATCHES = 1;
 
