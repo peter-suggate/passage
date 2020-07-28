@@ -7,7 +7,7 @@ import { ListenObservables } from "../listen/listenObservables";
 import {
   PracticePiece,
   initPracticePiece,
-} from "@/lib/audio/analysis/practice-pieces";
+} from "@/lib/passage-analysis/practice-pieces";
 import { Piece } from "@/lib/music-recognition";
 
 export const initPiecePracticeContext = (

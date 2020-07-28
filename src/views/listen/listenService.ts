@@ -1,5 +1,5 @@
 import { createMachine, interpret } from "xstate";
-import { Observable, of } from "rxjs";
+import { Observable } from "rxjs";
 import { AudioRecorderEventTypes } from "@/lib/audio/recorder";
 import { listenObservables, ListenObservables } from "./listenObservables";
 import {
@@ -9,7 +9,7 @@ import {
 import {
   PracticePieces,
   initPracticePieces,
-} from "@/lib/audio/analysis/practice-pieces";
+} from "@/lib/passage-analysis/practice-pieces";
 import { Piece } from "@/lib/music-recognition";
 import { nearestNotes$ } from "@/lib/audio/analysis";
 import { map } from "rxjs/operators";

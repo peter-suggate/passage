@@ -7,7 +7,6 @@ import { listenObservables } from "@/views/listen/listenObservables";
 import { AnalyzedNote } from "@/lib/audio/analysis";
 import { Note, note } from "@/lib/scales";
 import { of } from "rxjs";
-import { initPracticePiece } from "@/lib/audio/analysis/practice-pieces";
 
 const testNote = (note: Note): AnalyzedNote => ({
   age: 0,

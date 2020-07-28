@@ -158,13 +158,23 @@ describe("observable that generates distinct notes from runs of note pitches", (
     }
   });
 
-  it("emits notes with expected start times", async (done) => {
+  it.only("emits notes with expected start times", async (done) => {
     const n = makeNote;
 
     expect(
       expectEvents$<AnalyzedNote, number>(
         distinctNote$(
-          of(n("A", 0), n("A", 1), n("A", 2), n("C", 3), n("C", 4), n("C", 5))
+          of(
+            n("A", 0),
+            n("A", 1),
+            n("A", 2),
+            n("C", 3),
+            n("C", 4),
+            n("C", 5),
+            n("D", 6),
+            n("D", 7),
+            n("D", 8)
+          )
         ),
         [0, 3], // notes A and C begin at t=0, 3 respectively.
         done,
@@ -204,29 +214,43 @@ describe("observable that buffers latest T seconds of distinct events", () => {
   });
 
   it("omits notes that begin outside the time window", async (done) => {
-    const synth = await majorScaleSynth();
-
-    expectEvents$<AnalyzedNote[], Note[]>(
-      recentDistinctNotesByTime$(nearestNotes$(synth), posNumber(2.5)),
-      [
-        ["C"],
-        ["C", "D"],
-        ["C", "D", "E"],
-        ["D", "E", "F"],
-        ["E", "F", "G"],
-        ["F", "G", "A"],
-        ["G", "A", "B"],
-        ["A", "B", "C"],
-        ["B", "C", "B"],
-        ["C", "B", "A"],
-      ],
+    // const synth = await majorScaleSynth();
+    const n = makeNote;
+    const ns = (note: Note, t: number) =>
+      new Array(10).fill(undefined).map(() => n(note, t));
+    // const notes = [...ns("A", 0), ...ns("B", 1), ...ns("C", 2), ...ns("D", 3)];
+    // console.log(notes);
+    expectEvents$(
+      // distinctNote$(of(...notes)),
+      distinctNote$(
+        of(n("A", 0), n("A", 1), n("A", 2), n("C", 3), n("C", 4), n("C", 5))
+      ),
+      // recentDistinctNotesByTime$(
+      //   of(...ns("A", 0), ...ns("B", 1), ...ns("C", 2), ...ns("D", 3)),
+      //   posNumber(2.5)
+      // ),
+      // recentDistinctNotesByTime$(nearestNotes$(synth), posNumber(2.5)),
+      ["A", "C"],
+      // [
+      //   ["C"],
+      //   ["C", "D"],
+      //   ["C", "D", "E"],
+      //   ["D", "E", "F"],
+      //   ["E", "F", "G"],
+      //   ["F", "G", "A"],
+      //   ["G", "A", "B"],
+      //   ["A", "B", "C"],
+      //   ["B", "C", "B"],
+      //   ["C", "B", "A"],
+      // ],
       done,
       undefined,
-      (e) => e.map((p) => p.value)
+      // (e) => e.map((p) => p.value)
+      (e) => e.value
     );
 
-    for (let n = 1; n < 12; n++) {
-      synth.tick(synth.produceFrame(n * 1000 - 1));
-    }
+    // for (let n = 1; n < 12; n++) {
+    //   synth.tick(synth.produceFrame(n * 1000 - 1));
+    // }
   });
 });

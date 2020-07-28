@@ -7,12 +7,6 @@ export const expectEvents$ = <T, U = T>(
   filter?: (e: T) => boolean,
   transform?: <U>(e: T) => unknown
 ) => {
-  if (expected.length === 0) {
-    throw Error(
-      "expectEvents$() requires one or more expected events but received an empty array."
-    );
-  }
-
   const events: T[] = [];
 
   source$.subscribe(
@@ -37,7 +31,11 @@ export const expectEvents$ = <T, U = T>(
       }
     },
     undefined,
-    () => done()
+    () => {
+      expect(events.length).toBe(expected.length);
+
+      done();
+    }
   );
 };
 

@@ -1,5 +1,13 @@
 import { Observable, defer } from "rxjs";
-import { filter, map, bufferCount, pairwise, tap } from "rxjs/operators";
+import {
+  filter,
+  map,
+  bufferCount,
+  pairwise,
+  tap,
+  scan,
+  mergeMap,
+} from "rxjs/operators";
 import { AnalyzedNote } from "./analysis-types";
 
 export const notesAreEqual = (a: AnalyzedNote, b: AnalyzedNote) => {
@@ -12,22 +20,34 @@ export const notesAreEqual = (a: AnalyzedNote, b: AnalyzedNote) => {
  *
  * @param nearestNotes$
  */
-export const filterInBetweenNotes = () => (
-  source: Observable<AnalyzedNote>
-): Observable<AnalyzedNote> =>
-  defer(() =>
+export const filterTransitions = <T>(compareIn?: (a: T, b: T) => boolean) => (
+  source: Observable<T>
+): Observable<T> => {
+  const compare = compareIn || ((a: T, b: T) => a === b);
+
+  return defer(() =>
     source.pipe(
-      bufferCount(3),
-      // Emit nothing if insufficient notes (source completes before emitting 3).
-      filter((buffer) => buffer.length === 3),
-      filter(
-        (triple) =>
-          notesAreEqual(triple[0], triple[1]) &&
-          notesAreEqual(triple[1], triple[2])
-      ),
-      map((triple) => triple[0])
+      bufferUntilChanged(compare),
+      filter((buffer) => buffer.length >= 3),
+      mergeMap((triple) => triple)
     )
   );
+};
+
+// Like buffer + distinctUntilChanged
+export const bufferUntilChanged = <T>(compareIn?: (a: T, b: T) => boolean) => {
+  const compare = compareIn || ((a: T, b: T) => a === b);
+
+  return scan<T, T[]>((acc, curr) => {
+    if (acc.length === 0 || compare(curr, acc[acc.length - 1])) {
+      acc.push(curr);
+    } else {
+      acc = [curr];
+    }
+
+    return acc;
+  }, []);
+};
 
 //   /**
 //    * Emits only when the value changes.
