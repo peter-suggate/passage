@@ -6,7 +6,7 @@ import {
   scan,
   filter,
 } from "rxjs/operators";
-import { NearestNote } from "./analysis-types";
+import { AnalyzedNote } from "./analysis-types";
 import { notesAreEqual, filterInBetweenNotes } from "./analysis-operators";
 import { PosNumber, posNumber } from "@/lib/scales";
 
@@ -15,7 +15,7 @@ import { PosNumber, posNumber } from "@/lib/scales";
  *
  * @param notePitches
  */
-export const distinctNote = (notePitches: NearestNote[]) => {
+export const distinctNote = (notePitches: AnalyzedNote[]) => {
   if (notePitches.length === 0)
     throw Error("Cannot calculate distinct note: insufficient note pitches");
 
@@ -47,7 +47,7 @@ const bufferLastByTime = <T extends { t: number }>(seconds: PosNumber) =>
     return acc;
   }, []);
 
-export const distinctNote$ = (nearestNotes$: Observable<NearestNote>) => {
+export const distinctNote$ = (nearestNotes$: Observable<AnalyzedNote>) => {
   const cleanedNearestNotes$ = nearestNotes$.pipe(filterInBetweenNotes());
 
   return cleanedNearestNotes$.pipe(
@@ -62,8 +62,8 @@ export const distinctNote$ = (nearestNotes$: Observable<NearestNote>) => {
 };
 
 export const recentDistinctNotesByTime$ = (
-  nearestNotes$: Observable<NearestNote>,
+  nearestNotes$: Observable<AnalyzedNote>,
   seconds = posNumber(5)
-): Observable<NearestNote[]> => {
+): Observable<AnalyzedNote[]> => {
   return distinctNote$(nearestNotes$).pipe(bufferLastByTime(seconds));
 };

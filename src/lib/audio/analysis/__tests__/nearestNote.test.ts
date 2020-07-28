@@ -3,7 +3,7 @@ import { of } from "rxjs";
 import { AudioOnsetEvent, AudioPitchEvent } from "../../audio-types";
 import { activeNote$, frequencyToNearestNote } from "../nearestNote";
 import { noteToFrequency } from "..";
-import { NearestNote } from "../analysis-types";
+import { AnalyzedNote } from "../analysis-types";
 
 function pitchEvent(frequency: number = 440): AudioPitchEvent {
   return {
@@ -38,7 +38,7 @@ function onsetEvent(t = 0): AudioOnsetEvent {
 it("ignores onset events", async (done) => {
   const events = [onsetEvent(), pitchEvent(440), onsetEvent()];
 
-  const expected = [{ value: "A", cents: 0 } as NearestNote];
+  const expected = [{ value: "A", cents: 0 } as AnalyzedNote];
 
   expectEvents$(activeNote$(of(...events)), expected, done);
 });

@@ -1,8 +1,8 @@
 import { Observable, defer } from "rxjs";
 import { filter, map, bufferCount, pairwise, tap } from "rxjs/operators";
-import { NearestNote } from "./analysis-types";
+import { AnalyzedNote } from "./analysis-types";
 
-export const notesAreEqual = (a: NearestNote, b: NearestNote) => {
+export const notesAreEqual = (a: AnalyzedNote, b: AnalyzedNote) => {
   return a.value === b.value && a.octave === b.octave;
 };
 
@@ -13,8 +13,8 @@ export const notesAreEqual = (a: NearestNote, b: NearestNote) => {
  * @param nearestNotes$
  */
 export const filterInBetweenNotes = () => (
-  source: Observable<NearestNote>
-): Observable<NearestNote> =>
+  source: Observable<AnalyzedNote>
+): Observable<AnalyzedNote> =>
   defer(() =>
     source.pipe(
       bufferCount(3),
@@ -33,8 +33,8 @@ export const filterInBetweenNotes = () => (
 //    * Emits only when the value changes.
 //    */
 // export const filterNoteChanges = (getValue =>) => (
-//   source: Observable<NearestNote>
-// ): Observable<NearestNote> =>
+//   source: Observable<AnalyzedNote>
+// ): Observable<AnalyzedNote> =>
 //   defer(() => source.pipe(
 //     pairwise(),
 //     map(pair => {

@@ -1,6 +1,6 @@
 import { Note } from "@/lib/scales";
 
-export type NearestNote = {
+export type AnalyzedNote = {
   clarity: number;
   value: Note;
   octave: number;

@@ -3,7 +3,7 @@ import {
   distinctNote$,
   recentDistinctNotesByTime$,
 } from "../analysis-observables";
-import { NearestNote } from "../analysis-types";
+import { AnalyzedNote } from "../analysis-types";
 import { majorScaleSynth } from "../../synth/testing";
 import { expectEvents$ } from "@/lib/testing/rx-testing";
 import { Note, posNumber } from "@/lib/scales";
@@ -21,7 +21,7 @@ describe("calculating representative distinct note from a consecutive run of pit
       octave: 4,
       t: 0,
       value: "D",
-    } as NearestNote;
+    } as AnalyzedNote;
 
     expect(distinctNote([pitch])).toEqual(pitch);
   });
@@ -85,7 +85,7 @@ const makeNote = (
   t = 0,
   cents = 0,
   clarity = 0.9
-): NearestNote => ({
+): AnalyzedNote => ({
   age: t,
   cents,
   clarity,
@@ -144,7 +144,7 @@ describe("observable that generates distinct notes from runs of note pitches", (
     const synth = await majorScaleSynth(60 * NOTES_PER_SECOND, 1024);
 
     expect(
-      expectEvents$<NearestNote, Note>(
+      expectEvents$<AnalyzedNote, Note>(
         distinctNote$(nearestNotes$(synth)),
         ["C", "D", "E", "F", "G", "A"],
         done,
@@ -162,7 +162,7 @@ describe("observable that generates distinct notes from runs of note pitches", (
     const n = makeNote;
 
     expect(
-      expectEvents$<NearestNote, number>(
+      expectEvents$<AnalyzedNote, number>(
         distinctNote$(
           of(n("A", 0), n("A", 1), n("A", 2), n("C", 3), n("C", 4), n("C", 5))
         ),
@@ -179,7 +179,7 @@ describe("observable that buffers latest T seconds of distinct events", () => {
   it("emits all notes when they're within the time window", async (done) => {
     const synth = await majorScaleSynth();
 
-    expectEvents$<NearestNote[], Note[]>(
+    expectEvents$<AnalyzedNote[], Note[]>(
       recentDistinctNotesByTime$(nearestNotes$(synth), posNumber(15)),
       [
         ["C"],
@@ -206,7 +206,7 @@ describe("observable that buffers latest T seconds of distinct events", () => {
   it("omits notes that begin outside the time window", async (done) => {
     const synth = await majorScaleSynth();
 
-    expectEvents$<NearestNote[], Note[]>(
+    expectEvents$<AnalyzedNote[], Note[]>(
       recentDistinctNotesByTime$(nearestNotes$(synth), posNumber(2.5)),
       [
         ["C"],

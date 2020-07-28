@@ -4,12 +4,12 @@ import {
 } from "../piecePracticeService";
 import { TWINKLE } from "@/lib/music-recognition";
 import { listenObservables } from "@/views/listen/listenObservables";
-import { NearestNote } from "@/lib/audio/analysis";
+import { AnalyzedNote } from "@/lib/audio/analysis";
 import { Note, note } from "@/lib/scales";
 import { of } from "rxjs";
 import { initPracticePiece } from "@/lib/audio/analysis/practice-pieces";
 
-const testNote = (note: Note): NearestNote => ({
+const testNote = (note: Note): AnalyzedNote => ({
   age: 0,
   t: 9,
   cents: 0,

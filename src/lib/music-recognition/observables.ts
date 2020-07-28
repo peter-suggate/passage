@@ -1,6 +1,6 @@
 import { Observable } from "rxjs";
 import { map, filter } from "rxjs/operators";
-import { NearestNote } from "../audio/analysis";
+import { AnalyzedNote } from "../audio/analysis";
 import { NoteDelta } from "./noteDeltas";
 import { PhraseBuilder } from "./PhraseBuilder";
 import { integer } from "../scales";
@@ -8,7 +8,7 @@ import { musicBank } from "./musicBank";
 import { closestMatches, pieceMatch } from "./phraseMatch";
 
 export const mapNotesToNoteDeltas = () =>
-  map<NearestNote[], NoteDelta[]>((notes) => {
+  map<AnalyzedNote[], NoteDelta[]>((notes) => {
     return PhraseBuilder().push(
       ...notes.map((note) => ({
         value: note.value,
@@ -18,7 +18,7 @@ export const mapNotesToNoteDeltas = () =>
   });
 
 export const closestMatchingPieces$ = (minNotes = 5, maxMatches = 5) => (
-  recentDistinctNotes$: Observable<NearestNote[]>
+  recentDistinctNotes$: Observable<AnalyzedNote[]>
 ) => {
   const pieces = musicBank();
 
@@ -37,7 +37,7 @@ export const closestMatchingPieces$ = (minNotes = 5, maxMatches = 5) => (
  * @param maxEditDistance The maximum allowed deviation from a perfect match.
  */
 export const matchedPiece$ = (minNotes = 10, maxEditDistance = 3) => (
-  recentDistinctNotes$: Observable<NearestNote[]>
+  recentDistinctNotes$: Observable<AnalyzedNote[]>
 ) => {
   const pieces = musicBank();
 

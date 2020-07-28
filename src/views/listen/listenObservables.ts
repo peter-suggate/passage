@@ -1,7 +1,7 @@
 import { Observable } from "rxjs";
 import { recentDistinctNotes$ } from "@/lib/audio/analysis/analyzer";
 import { share } from "rxjs/operators";
-import { NearestNote } from "@/lib/audio/analysis";
+import { AnalyzedNote } from "@/lib/audio/analysis";
 import {
   closestMatchingPieces$,
   matchedPiece$,
@@ -14,7 +14,7 @@ import {
  * @param events$ Observable of audio events produced by the recorder.
  */
 export const listenObservables = (
-  note$: Observable<NearestNote>
+  note$: Observable<AnalyzedNote>
   // note$ = nearestNotes$(recordedEvents$);
   // recordedEvents$: Observable<AudioRecorderEventTypes>
 ) => {

@@ -2,7 +2,7 @@ import { allEvents$, expectEvents$ } from "@/lib/testing/rx-testing";
 import { nearestNotes$, recentDistinctNotes$ } from "../analyzer";
 import { Note, posNumber, posInteger } from "@/lib/scales";
 import { majorScaleSynth } from "../../synth/testing";
-import { NearestNote } from "../analysis-types";
+import { AnalyzedNote } from "../analysis-types";
 import { recentDistinctNotesByTime$ } from "../analysis-observables";
 
 it("returns all expected notes", async (done) => {
@@ -11,12 +11,12 @@ it("returns all expected notes", async (done) => {
   const synth = await majorScaleSynth(60 * NOTES_PER_SECOND, 1024);
 
   expect(
-    allEvents$<NearestNote>(
+    allEvents$<AnalyzedNote>(
       nearestNotes$(synth),
       (events) => {
         expect(
           events.map(
-            (e: NearestNote) => e.value /*({ note: e.value, cents: e.cents })*/
+            (e: AnalyzedNote) => e.value /*({ note: e.value, cents: e.cents })*/
           )
         ).toMatchSnapshot();
       },
@@ -35,7 +35,7 @@ describe("calculating N last distinct notes", () => {
   it("removes repeated notes", async (done) => {
     const synth = await majorScaleSynth();
 
-    expectEvents$<NearestNote[], Note[]>(
+    expectEvents$<AnalyzedNote[], Note[]>(
       recentDistinctNotes$(nearestNotes$(synth), posInteger(5)),
       [["C"], ["C", "D"], ["C", "D", "E"], ["C", "D", "E", "F"]],
       done,
@@ -51,7 +51,7 @@ describe("calculating N last distinct notes", () => {
   it("keeps only the last N notes", async (done) => {
     const synth = await majorScaleSynth();
 
-    expectEvents$<NearestNote[], Note[]>(
+    expectEvents$<AnalyzedNote[], Note[]>(
       recentDistinctNotes$(nearestNotes$(synth), posInteger(5)),
       [
         ["C"],
@@ -82,7 +82,7 @@ describe("calculating N last distinct notes", () => {
     const synth = await majorScaleSynth(60 * NOTES_PER_SECOND, 1024);
 
     expect(
-      expectEvents$<NearestNote[], Note[]>(
+      expectEvents$<AnalyzedNote[], Note[]>(
         recentDistinctNotes$(nearestNotes$(synth), posInteger(5)),
         [
           ["C"],
@@ -118,7 +118,7 @@ describe("filtering notes to those within most recent N seconds", () => {
     const bpm = 60;
     const synth = await majorScaleSynth(bpm);
 
-    expectEvents$<NearestNote[], Note[]>(
+    expectEvents$<AnalyzedNote[], Note[]>(
       recentDistinctNotesByTime$(nearestNotes$(synth), posNumber(1)),
       [
         ["C"],
@@ -139,7 +139,7 @@ describe("filtering notes to those within most recent N seconds", () => {
   it("keeps only the last N notes", async (done) => {
     const synth = await majorScaleSynth();
 
-    expectEvents$<NearestNote[], Note[]>(
+    expectEvents$<AnalyzedNote[], Note[]>(
       recentDistinctNotes$(nearestNotes$(synth), posInteger(5)),
       [
         ["C"],
@@ -170,7 +170,7 @@ describe("filtering notes to those within most recent N seconds", () => {
     const synth = await majorScaleSynth(60 * NOTES_PER_SECOND, 1024);
 
     expect(
-      expectEvents$<NearestNote[], Note[]>(
+      expectEvents$<AnalyzedNote[], Note[]>(
         recentDistinctNotes$(nearestNotes$(synth), posInteger(5)),
         [
           ["C"],

@@ -1,1 +1,1 @@
-export * from "./observables";
+export * from "./passage-observables";

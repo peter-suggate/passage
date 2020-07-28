@@ -9,7 +9,7 @@ import {
 import { cast } from "@/lib/testing/partial-impl";
 import { AudioPitchEvent, AudioOnsetEvent } from "../audio-types";
 import { frequencyToNearestNote } from "./nearestNote";
-import { NearestNote } from "./analysis-types";
+import { AnalyzedNote } from "./analysis-types";
 import { filterInBetweenNotes } from "./analysis-operators";
 import { posInteger } from "@/lib/scales";
 
@@ -53,7 +53,7 @@ const median = () =>
   });
 
 const nearestNote = () =>
-  map<PartitionedEvents, NearestNote>(([p, onset]) => {
+  map<PartitionedEvents, AnalyzedNote>(([p, onset]) => {
     const { pitch } = cast<AudioPitchEvent>(p);
     const { t } = cast<AudioOnsetEvent>(onset);
     return {
@@ -80,7 +80,7 @@ export const nearestNotes$ = (
   );
 };
 
-export const distinctNotes$ = (nearestNotes$: Observable<NearestNote>) => {
+export const distinctNotes$ = (nearestNotes$: Observable<AnalyzedNote>) => {
   return nearestNotes$.pipe(
     filterInBetweenNotes(),
     distinctUntilChanged((x, y) => x.value === y.value)
@@ -88,7 +88,7 @@ export const distinctNotes$ = (nearestNotes$: Observable<NearestNote>) => {
 };
 
 export const recentDistinctNotes$ = (
-  nearestNotes$: Observable<NearestNote>,
+  nearestNotes$: Observable<AnalyzedNote>,
   N = posInteger(20)
 ) => {
   return nearestNotes$.pipe(

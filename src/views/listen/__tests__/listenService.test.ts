@@ -3,7 +3,7 @@ import {
   ListenContext,
   listenMachine,
 } from "../listenService";
-import { NearestNote } from "@/lib/audio/analysis";
+import { AnalyzedNote } from "@/lib/audio/analysis";
 import { Observable, of } from "rxjs";
 import { partialImpl } from "@/lib/testing/partial-impl";
 import { ListenObservables } from "../listenObservables";

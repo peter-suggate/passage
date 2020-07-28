@@ -29,7 +29,7 @@ events:
 ## Touble spot state
 
 ```ts
-type Run = { nearestNotes: NearestNote[] };
+type Run = { notes: AnalyzedNote[] };
 ```
 
 context:
