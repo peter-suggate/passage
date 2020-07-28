@@ -1,6 +1,6 @@
 import { Observable } from "rxjs";
 
-export const expectEvents$ = async <T, U = T>(
+export const expectEvents$ = <T, U = T>(
   source$: Observable<T>,
   expected: Partial<U>[] | U[],
   done: jest.DoneCallback,
@@ -39,8 +39,6 @@ export const expectEvents$ = async <T, U = T>(
     undefined,
     () => done()
   );
-
-  await source$.toPromise();
 };
 
 export const allEvents$ = <T>(

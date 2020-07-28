@@ -175,11 +175,11 @@ describe("observable that generates distinct notes from runs of note pitches", (
   });
 });
 
-describe.only("observable that buffers latest T seconds of distinct events", () => {
+describe("observable that buffers latest T seconds of distinct events", () => {
   it("emits all notes when they're within the time window", async (done) => {
     const synth = await majorScaleSynth();
 
-    await expectEvents$<NearestNote[], Note[]>(
+    expectEvents$<NearestNote[], Note[]>(
       recentDistinctNotesByTime$(nearestNotes$(synth), posNumber(15)),
       [
         ["C"],
@@ -188,6 +188,10 @@ describe.only("observable that buffers latest T seconds of distinct events", () 
         ["C", "D", "E", "F"],
         ["C", "D", "E", "F", "G"],
         ["C", "D", "E", "F", "G", "A"],
+        ["C", "D", "E", "F", "G", "A", "B"],
+        ["C", "D", "E", "F", "G", "A", "B", "C"],
+        ["C", "D", "E", "F", "G", "A", "B", "C", "B"],
+        ["C", "D", "E", "F", "G", "A", "B", "C", "B", "A"],
       ],
       done,
       undefined,
@@ -197,13 +201,12 @@ describe.only("observable that buffers latest T seconds of distinct events", () 
     for (let n = 1; n < 12; n++) {
       synth.tick(synth.produceFrame(n * 1000 - 1));
     }
-    synth.complete();
   });
 
   it("omits notes that begin outside the time window", async (done) => {
     const synth = await majorScaleSynth();
 
-    await expectEvents$<NearestNote[], Note[]>(
+    expectEvents$<NearestNote[], Note[]>(
       recentDistinctNotesByTime$(nearestNotes$(synth), posNumber(2.5)),
       [
         ["C"],
@@ -225,6 +228,5 @@ describe.only("observable that buffers latest T seconds of distinct events", () 
     for (let n = 1; n < 12; n++) {
       synth.tick(synth.produceFrame(n * 1000 - 1));
     }
-    synth.complete();
   });
 });
