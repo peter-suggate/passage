@@ -1,8 +1,13 @@
 import { Observable } from "rxjs";
 import { map, scan, filter, tap } from "rxjs/operators";
 import { AnalyzedNote } from "./analysis-types";
-import { notesAreEqual, filterTransitions } from "./analysis-operators";
-import { PosNumber, posNumber, Note } from "@/lib/scales";
+import {
+  notesAreEqual,
+  filterTransitions,
+  bufferUntilChanged,
+  log,
+} from "./analysis-operators";
+import { PosNumber, posNumber } from "@/lib/scales";
 
 /**
  * Computes a single, distinct note that best represents a consecutive run of note pitches.
@@ -28,6 +33,8 @@ export const distinctNote = (notePitches: AnalyzedNote[]) => {
   };
 };
 
+export const filterTransitionNote = () => filterTransitions(notesAreEqual);
+
 const bufferLastByTime = <T extends { t: number }>(seconds: PosNumber) =>
   scan<T, T[]>((acc, curr) => {
     acc.push(curr);
@@ -41,34 +48,10 @@ const bufferLastByTime = <T extends { t: number }>(seconds: PosNumber) =>
     return acc;
   }, []);
 
-const bufferUntilChanged = <T extends { value: Note }>() =>
-  scan<T, T[]>((acc, curr) => {
-    if (acc.length === 0 || curr.value === acc[acc.length - 1].value) {
-      acc.push(curr);
-    } else {
-      acc = [];
-    }
-
-    return acc;
-  }, []);
-
 export const distinctNote$ = (note$: Observable<AnalyzedNote>) => {
-  const cleanedNotes$ = note$.pipe(
-    filterTransitions(notesAreEqual)
-    // tap((e) => console.log(e))
-  );
-
-  return cleanedNotes$.pipe(
-    // tap((e) => console.log(e)),
-    bufferUntilChanged(),
-    // buffer(
-    //   cleanedNotes$.pipe(
-    //     // tap((e) => console.log(e)),
-    //     distinctUntilChanged((x, y) => notesAreEqual(x, y))
-    //     // tap((e) => console.log(e))
-    //   )
-    // ),
-    tap((e) => console.log(e)),
+  return note$.pipe(
+    filterTransitionNote(),
+    bufferUntilChanged(notesAreEqual),
     filter((notePitches) => notePitches.length > 0),
     map((notePitches) => distinctNote(notePitches))
   );
@@ -78,8 +61,5 @@ export const recentDistinctNotesByTime$ = (
   note$: Observable<AnalyzedNote>,
   seconds = posNumber(5)
 ): Observable<AnalyzedNote[]> => {
-  return distinctNote$(note$).pipe(
-    // tap((e) => console.log(e)),
-    bufferLastByTime(seconds)
-  );
+  return distinctNote$(note$).pipe(bufferLastByTime(seconds));
 };

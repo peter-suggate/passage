@@ -2,6 +2,7 @@ import {
   distinctNote,
   distinctNote$,
   recentDistinctNotesByTime$,
+  filterTransitionNote,
 } from "../analysis-observables";
 import { AnalyzedNote } from "../analysis-types";
 import { majorScaleSynth } from "../../synth/testing";
@@ -9,8 +10,6 @@ import { expectEvents$ } from "@/lib/testing/rx-testing";
 import { Note, posNumber } from "@/lib/scales";
 import { nearestNotes$ } from "../analyzer";
 import { of } from "rxjs";
-import { filterInBetweenNotes } from "../analysis-operators";
-import { tap } from "rxjs/operators";
 
 describe("calculating representative distinct note from a consecutive run of pitches", () => {
   it("returns correct note when there's only one pitch", () => {
@@ -101,38 +100,36 @@ describe("filtering out intermediate passing notes between plateaus", () => {
     // Not enough notes/pitches
     expect(
       await of(n("C#"))
-        .pipe(filterInBetweenNotes())
+        .pipe(filterTransitionNote())
         .toPromise()
     ).toBeUndefined();
 
     // Still not enough..
     expect(
       await of(n("A"), n("A"))
-        .pipe(filterInBetweenNotes())
+        .pipe(filterTransitionNote())
         .toPromise()
     ).toBeUndefined();
 
     // Not enough consecutive notes of same type.
     expect(
       await of(n("A"), n("A"), n("B"), n("B"), n("C"))
-        .pipe(filterInBetweenNotes())
+        .pipe(filterTransitionNote())
         .toPromise()
     ).toBeUndefined();
   });
 
-  it("emits multiple notes", async (done) => {
+  it("emits multiple notes, skipping isolated notes", async (done) => {
     const n = makeNote;
 
     expectEvents$(
-      of(n("A"), n("A"), n("A"), n("A"), n("B"), n("B"), n("B")).pipe(
-        filterInBetweenNotes()
+      of(n("A"), n("A"), n("A"), n("A#"), n("B"), n("B"), n("B")).pipe(
+        filterTransitionNote()
       ),
-      [
-        { age: 0, cents: 0, clarity: 0.9, octave: 4, t: 0, value: "A" },
-        { age: 0, cents: 0, clarity: 0.9, octave: 4, t: 0, value: "A" },
-        { age: 0, cents: 0, clarity: 0.9, octave: 4, t: 0, value: "B" },
-      ],
-      done
+      ["A", "A", "A", "B", "B", "B"],
+      done,
+      undefined,
+      (e) => e.value
     );
   });
 });
@@ -146,7 +143,7 @@ describe("observable that generates distinct notes from runs of note pitches", (
     expect(
       expectEvents$<AnalyzedNote, Note>(
         distinctNote$(nearestNotes$(synth)),
-        ["C", "D", "E", "F", "G", "A"],
+        ["C", "D", "E", "F", "G"],
         done,
         undefined,
         (e) => e.value
@@ -158,7 +155,7 @@ describe("observable that generates distinct notes from runs of note pitches", (
     }
   });
 
-  it.only("emits notes with expected start times", async (done) => {
+  it("emits notes with expected start times", async (done) => {
     const n = makeNote;
 
     expect(
@@ -176,10 +173,47 @@ describe("observable that generates distinct notes from runs of note pitches", (
             n("D", 8)
           )
         ),
-        [0, 3], // notes A and C begin at t=0, 3 respectively.
+        [0, 3, 6], // notes A and C begin at t=0, 3 respectively.
         done,
         undefined,
         (e) => e.t
+      )
+    );
+  });
+
+  it("emits notes with averaged intonation accuracy", async (done) => {
+    const n = makeNote;
+
+    expect(
+      expectEvents$<AnalyzedNote, number>(
+        distinctNote$(
+          of(n("A", 0, -10), n("A", 1, -5), n("A", 2, -5), n("A", 2, -10))
+        ),
+        [-7.5],
+        done,
+        undefined,
+        (e) => e.cents
+      )
+    );
+  });
+
+  it("emits notes with averaged clarity", async (done) => {
+    const n = makeNote;
+
+    expect(
+      expectEvents$<AnalyzedNote, number>(
+        distinctNote$(
+          of(
+            n("A", 0, 0, 0.91),
+            n("A", 1, 0, 0.8),
+            n("A", 2, 0, 0.91),
+            n("A", 2, 0, 0.8)
+          )
+        ),
+        [0.855],
+        done,
+        undefined,
+        (e) => e.clarity
       )
     );
   });
@@ -201,7 +235,7 @@ describe("observable that buffers latest T seconds of distinct events", () => {
         ["C", "D", "E", "F", "G", "A", "B"],
         ["C", "D", "E", "F", "G", "A", "B", "C"],
         ["C", "D", "E", "F", "G", "A", "B", "C", "B"],
-        ["C", "D", "E", "F", "G", "A", "B", "C", "B", "A"],
+        // ["C", "D", "E", "F", "G", "A", "B", "C", "B", "A"],
       ],
       done,
       undefined,
@@ -214,43 +248,25 @@ describe("observable that buffers latest T seconds of distinct events", () => {
   });
 
   it("omits notes that begin outside the time window", async (done) => {
-    // const synth = await majorScaleSynth();
     const n = makeNote;
     const ns = (note: Note, t: number) =>
-      new Array(10).fill(undefined).map(() => n(note, t));
-    // const notes = [...ns("A", 0), ...ns("B", 1), ...ns("C", 2), ...ns("D", 3)];
-    // console.log(notes);
+      new Array(3).fill(undefined).map(() => n(note, t));
+
     expectEvents$(
-      // distinctNote$(of(...notes)),
-      distinctNote$(
-        of(n("A", 0), n("A", 1), n("A", 2), n("C", 3), n("C", 4), n("C", 5))
+      recentDistinctNotesByTime$(
+        of(
+          ...ns("A", 0),
+          n("A#", 0.5), // Isolated note to be filtered out.
+          ...ns("B", 1),
+          ...ns("C", 2),
+          ...ns("D", 3)
+        ),
+        posNumber(2.5)
       ),
-      // recentDistinctNotesByTime$(
-      //   of(...ns("A", 0), ...ns("B", 1), ...ns("C", 2), ...ns("D", 3)),
-      //   posNumber(2.5)
-      // ),
-      // recentDistinctNotesByTime$(nearestNotes$(synth), posNumber(2.5)),
-      ["A", "C"],
-      // [
-      //   ["C"],
-      //   ["C", "D"],
-      //   ["C", "D", "E"],
-      //   ["D", "E", "F"],
-      //   ["E", "F", "G"],
-      //   ["F", "G", "A"],
-      //   ["G", "A", "B"],
-      //   ["A", "B", "C"],
-      //   ["B", "C", "B"],
-      //   ["C", "B", "A"],
-      // ],
+      [["A"], ["A", "B"], ["A", "B", "C"], ["B", "C", "D"]],
       done,
       undefined,
-      // (e) => e.map((p) => p.value)
-      (e) => e.value
+      (e) => e.map((p) => p.value)
     );
-
-    // for (let n = 1; n < 12; n++) {
-    //   synth.tick(synth.produceFrame(n * 1000 - 1));
-    // }
   });
 });
