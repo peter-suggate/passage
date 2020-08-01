@@ -19,14 +19,29 @@ export const posInteger = (value: number): PosInteger => {
   return (value | 0) as PosInteger;
 };
 
+export type Integer = Opaque<"Integer", number>;
+
+export const integer = (value: number): Integer => {
+  return (value | 0) as Integer;
+};
+
 export type NonNegInteger = Opaque<"NonNegInteger", number>;
 
 export const nonNegInteger = (value: number): NonNegInteger => {
-  if (value <= 0) {
+  if (value < 0) {
     throw Error("Valid NonNegIntegers must be >= 0, got: " + value);
   }
 
   return (value | 0) as NonNegInteger;
+};
+
+export type PosNumber = Opaque<"PosNumber", number>;
+
+export const posNumber = (value: number): PosNumber => {
+  if (value <= 0)
+    throw Error("Positive numbers must be greater than 0, got: " + value);
+
+  return value as PosNumber;
 };
 
 export type ScaleHalftone = Opaque<"ScaleTone", number>;
@@ -59,6 +74,12 @@ export type Note =
   | "F#"
   | "G"
   | "G#";
+
+export const note = (note: string) => {
+  return note as Note;
+};
+
+export type OctaveNote = { value: Note; octave: Integer };
 
 // export type ScaleHalftones = [Note, Note, Note, Note, Note, Note, Note];
 

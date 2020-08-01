@@ -29,7 +29,7 @@ export const defaultSynthConfig = (): SynthesizerConfig => ({
   instrument: "bell",
   scaleType: {
     scale: { tonic: "A", mode: "major" },
-    startOctave: nonNegInteger(2),
+    startOctave: nonNegInteger(3),
     octaves: posInteger(1),
   },
   bpm: bpm(60),

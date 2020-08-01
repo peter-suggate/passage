@@ -6,7 +6,7 @@
         :key="component"
         v-bind:style="pageStyles$[index]"
       >
-        <component :is="component"></component>
+        <component :is="component" :appService="appService"></component>
       </div>
     </v-main>
   </v-app>
@@ -15,13 +15,12 @@
 <script lang="ts">
 import Vue from "vue";
 import {
-  pageComponents,
-  PageConfig,
-  appPageConfig,
+  layoutViews,
+  LayoutConfig,
+  appLayouts,
   pageStyles$
-} from "@/transitions/page-transforms";
-import { audioService } from "./lib/audio";
-import { AudioState } from "./lib/audio/audioService";
+} from "@/layouts/appLayouts";
+import { makeAppService, AppService, makeApp$, AppState } from "./appService";
 
 export default Vue.extend({
   name: "App",
@@ -29,10 +28,12 @@ export default Vue.extend({
   data: () =>
     ({
       observer: undefined,
-      activePages: appPageConfig({ value: "uninitialized", context: {} })
+      activePages: appLayouts({ value: "uninitialized", context: {} }),
+      appService: makeAppService()
     } as {
       observer: undefined | IntersectionObserver;
-      activePages: PageConfig[];
+      activePages: LayoutConfig[];
+      appService: AppService;
     }),
 
   computed: {
@@ -42,18 +43,25 @@ export default Vue.extend({
   },
 
   components: {
-    ...pageComponents
+    ...layoutViews
   },
 
   subscriptions: function(this) {
+    const appService: AppService = this.$data.appService;
+
+    const app$ = makeApp$(appService);
+
     return {
-      pageStyles$: pageStyles$()
+      app$,
+      pageStyles$: pageStyles$(app$)
     };
   },
 
   created: function(this) {
-    audioService.onTransition(state => {
-      this.activePages = appPageConfig(state as AudioState);
+    const appService: AppService = this.appService;
+
+    appService.onTransition(state => {
+      this.activePages = appLayouts(state as AppState);
     });
   }
 });

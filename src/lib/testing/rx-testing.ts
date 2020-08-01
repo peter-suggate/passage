@@ -1,24 +1,28 @@
 import { Observable } from "rxjs";
 
-export const expectEvents$ = <T>(
+export const expectEvents$ = <T, U = T>(
   source$: Observable<T>,
-  expected: Partial<T>[] | T[],
+  expected: Partial<U>[] | U[],
   done: jest.DoneCallback,
-  filter: (e: T) => boolean = () => true
+  filter?: (e: T) => boolean,
+  transform?: <U>(e: T) => unknown
 ) => {
-  if (expected.length === 0) {
-    throw Error(
-      "expectEvents$() requires one or more expected events but received an empty array."
-    );
-  }
-
   const events: T[] = [];
 
   source$.subscribe(
     (event) => {
-      if (!filter(event)) return;
+      if (filter && !filter(event)) return;
 
-      expect(event).toMatchObject(expected[events.length]);
+      let eventToCompare: T | unknown = event;
+      if (transform) {
+        eventToCompare = transform(event);
+      }
+
+      if (typeof eventToCompare === "object") {
+        expect(eventToCompare).toMatchObject(expected[events.length]);
+      } else {
+        expect(eventToCompare).toEqual(expected[events.length]);
+      }
 
       events.push(event);
 
@@ -27,7 +31,30 @@ export const expectEvents$ = <T>(
       }
     },
     undefined,
-    () => done()
+    () => {
+      expect(events.length).toBe(expected.length);
+
+      done();
+    }
+  );
+};
+
+export const allEvents$ = <T>(
+  source$: Observable<T>,
+  callback: (events: T[]) => void,
+  done: jest.DoneCallback
+) => {
+  const events: T[] = [];
+
+  source$.subscribe(
+    (event) => {
+      events.push(event);
+    },
+    undefined,
+    () => {
+      callback(events);
+      done();
+    }
   );
 };
 

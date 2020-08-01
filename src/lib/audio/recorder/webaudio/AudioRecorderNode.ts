@@ -96,12 +96,12 @@ export class AudioRecorderNode extends Subject<AudioRecorderEventTypes>
               type: "onset",
               t: pitch.t,
             });
+          } else {
+            this.next({
+              type: "pitch",
+              pitch,
+            });
           }
-
-          this.next({
-            type: "pitch",
-            pitch,
-          });
         });
 
         break;

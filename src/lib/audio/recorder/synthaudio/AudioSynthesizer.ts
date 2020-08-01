@@ -1,9 +1,5 @@
 import { Subject, of, Subscription } from "rxjs";
-import {
-  AudioRecorderEventTypes,
-  AudioProcessorEventTypes,
-  Suspendable,
-} from "../recorder-types";
+import { AudioRecorderEventTypes, Suspendable } from "../recorder-types";
 import { noteToFrequency } from "@/lib/audio/analysis";
 import init, {
   AudioSamplesProcessor,
@@ -17,19 +13,20 @@ import {
   halftonesFromConcertA,
 } from "@/lib/scales/generateScaleHalftones";
 import { OctavesScale, Bpm, ScaleHalftone } from "@/lib/scales";
+import { Pitch } from "music-analyzer-wasm-rs";
 
 function isTest() {
   return process.env.JEST_WORKER_ID !== undefined;
 }
 
 const bpmToMsPerBeat = (bpm: Bpm) => {
-  return (1000 * bpm) / 60;
+  return (1000 * 60) / bpm;
 };
 
 export const pitchAtMs = (
   ms: number,
   config: Pick<SynthesizerConfig, "bpm" | "scaleType">,
-  memo: Map<OctavesScale, ScaleHalftone[]>
+  memo?: Map<OctavesScale, ScaleHalftone[]>
 ): number => {
   const { bpm, scaleType } = config;
 
@@ -38,24 +35,24 @@ export const pitchAtMs = (
   const scaleNoteIndex =
     Math.floor(ms / bpmToMsPerBeat(bpm)) % fullScale.length;
 
-  // const frameInScale = frame % fullScale.length;
-  // const numberOfNotesInScale = 2 * scale.length * octaves - 1;
-
-  // // const octave =
-  // const semitonesAboveTonic =
-  //   Math.floor(frame / bpmToMsPerBeat(bpm)) % numberOfNotesInScale;
-
   return noteToFrequency(
     fullScale[scaleNoteIndex] +
       halftonesFromConcertA(scaleType.scale.tonic, scaleType.startOctave)
   );
 };
 
-const TWO_PI = Math.PI * 2;
-const INV_SAMPLE_RATE = 1 / 48000;
-const sinewave = (x: number, freq: number) => {
-  const fx = x * TWO_PI * freq * INV_SAMPLE_RATE;
-  return Math.sin(fx);
+const SinewaveGenerator = (sampleRate: number) => {
+  let x = 0;
+
+  const TWO_PI = Math.PI * 2;
+  const invSampleRate = 1 / sampleRate;
+
+  return {
+    next: (atFreq: number) => {
+      x += TWO_PI * atFreq * invSampleRate;
+      return Math.sin(x);
+    },
+  };
 };
 
 export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
@@ -69,8 +66,8 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
 
   prevNoteFreq = 0;
   prevNoteT = 0;
-  x = 0;
   wasmChunkBuffer = new Float32Array(AudioSynthesizer.CHUNK_SIZE);
+  sinewaveGenerator = SinewaveGenerator(AudioSynthesizer.SAMPLE_RATE);
 
   private constructor(
     private readonly config: SynthesizerConfig,
@@ -93,28 +90,41 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
       .pipe(
         repeat(),
         map((start) => animationFrame.now() - start),
-        map((t) => ({ t, noteFreq: pitchAtMs(t, this.config, this.memo) }))
+        map((t) => this.produceFrame(t))
       )
       .subscribe((frame) => this.tick(frame));
   }
 
   private sendSamplesToWasm(frame: { t: number; noteFreq: number }) {
+    // console.log(
+    //   "sending samples to WASM",
+    //   "this.prevNoteT",
+    //   this.prevNoteT,
+    //   "frame.t",
+    //   frame.t,
+    //   "frame.noteFreq",
+    //   frame.noteFreq
+    // );
     const msElapsed = frame.t - this.prevNoteT;
     const chunks = Math.floor(
       (AudioSynthesizer.UPDATES_PER_SECOND * msElapsed) / 1000
     );
     for (let i = 0; i < chunks; i++) {
       for (let dx = 0; dx < AudioSynthesizer.CHUNK_SIZE; dx++)
-        this.wasmChunkBuffer[dx] = sinewave(this.x++, frame.noteFreq);
+        this.wasmChunkBuffer[dx] = this.sinewaveGenerator.next(frame.noteFreq);
       this.wasmSamplesProcessor.add_samples_chunk(this.wasmChunkBuffer);
     }
     this.prevNoteT = frame.t;
   }
 
+  produceFrame(t: number) {
+    return { t, noteFreq: pitchAtMs(t, this.config, this.memo) };
+  }
+
   tick(frame: { t: number; noteFreq: number }) {
     this.sendSamplesToWasm(frame);
 
-    if (!this.wasmSamplesProcessor.has_sufficient_samples()) {
+    if (!this.wasmSamplesProcessor.has_sufficient_samples(this.pitchDetector)) {
       return;
     }
 
@@ -127,7 +137,7 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
     } else {
       const pitches = result.pitches;
       if (pitches.length > 0) {
-        pitches.forEach((pitch) => {
+        pitches.forEach((pitch: Pitch) => {
           if (pitch.onset) {
             this.next({
               type: "onset",
@@ -136,33 +146,27 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
           } else {
             this.next({
               type: "pitch",
-              pitch,
+              pitch: {
+                clarity: pitch.clarity,
+                frequency: pitch.frequency,
+                onset: false,
+                t: pitch.t,
+              },
             });
           }
         });
 
-        // pitches.forEach((p) => p.free());
+        pitches.forEach((p) => p.free());
       }
     }
-    // if (frame.noteFreq !== this.prevNoteFreq) {
-    //   this.next({
-    //     type: "onset",
-    //     t: frame.t,
-    //   });
-    // }
-
-    // this.next({
-    //   type: "pitch",
-    //   pitch: {
-    //     clarity: 0.9,
-    //     frequency: frame.noteFreq,
-    //     onset: false,
-    //     t: frame.t,
-    //   },
-    // });
   }
 
-  static async create(config: SynthesizerConfig) {
+  static async create(
+    config: SynthesizerConfig,
+    windowSamples = 2048,
+    powerThreshold = 0.9,
+    clarityThreshold = 0.75
+  ) {
     try {
       const wasmBytes = await AudioSynthesizer.fetchMusicAnalyzerWasm();
 
@@ -172,7 +176,10 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
 
       const pitchDetector = wasmSamplesProcessor.create_pitch_detector(
         "McLeod",
-        2048
+        windowSamples,
+        AudioSynthesizer.SAMPLE_RATE,
+        powerThreshold,
+        clarityThreshold
       );
 
       if (!pitchDetector) {

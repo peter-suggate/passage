@@ -1,12 +1,9 @@
 import { expectEvents$ } from "../../../testing/rx-testing";
 import { of } from "rxjs";
 import { AudioOnsetEvent, AudioPitchEvent } from "../../audio-types";
-import {
-  activeNote$,
-  frequencyToNearestNote,
-  NearestNote,
-} from "../nearestNote";
+import { activeNote$, frequencyToNearestNote } from "../nearestNote";
 import { noteToFrequency } from "..";
+import { AnalyzedNote } from "../analysis-types";
 
 function pitchEvent(frequency: number = 440): AudioPitchEvent {
   return {
@@ -41,7 +38,7 @@ function onsetEvent(t = 0): AudioOnsetEvent {
 it("ignores onset events", async (done) => {
   const events = [onsetEvent(), pitchEvent(440), onsetEvent()];
 
-  const expected = [{ value: "A", cents: 0 } as NearestNote];
+  const expected = [{ value: "A", cents: 0 } as AnalyzedNote];
 
   expectEvents$(activeNote$(of(...events)), expected, done);
 });
@@ -108,7 +105,7 @@ describe("frequencyToNearestNote", () => {
   it("calculates correct note value and octave for concert A", () => {
     expect(frequencyToNearestNote(440)).toEqual({
       value: "A",
-      octave: 6,
+      octave: 5,
       cents: 0,
     });
   });
@@ -116,7 +113,7 @@ describe("frequencyToNearestNote", () => {
   it("calculates correct note value and octave for a note an octave below concert A", () => {
     expect(frequencyToNearestNote(220)).toEqual({
       value: "A",
-      octave: 5,
+      octave: 4,
       cents: 0,
     });
   });
