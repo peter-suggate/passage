@@ -7,9 +7,10 @@ import {
 import { AnalyzedNote } from "../analysis-types";
 import { majorScaleSynth } from "../../synth/testing";
 import { expectEvents$ } from "@/lib/testing/rx-testing";
-import { Note, posNumber } from "@/lib/scales";
+import { Note } from "@/lib/scales";
 import { nearestNotes$ } from "../analyzer";
 import { of } from "rxjs";
+import { seconds } from "@/lib/passage-analysis";
 
 describe("calculating representative distinct note from a consecutive run of pitches", () => {
   it("returns correct note when there's only one pitch", () => {
@@ -224,7 +225,7 @@ describe("observable that buffers latest T seconds of distinct events", () => {
     const synth = await majorScaleSynth();
 
     expectEvents$<AnalyzedNote[], Note[]>(
-      recentDistinctNotesByTime$(nearestNotes$(synth), posNumber(15)),
+      recentDistinctNotesByTime$(nearestNotes$(synth), seconds(15)),
       [
         ["C"],
         ["C", "D"],
@@ -261,7 +262,7 @@ describe("observable that buffers latest T seconds of distinct events", () => {
           ...ns("C", 2),
           ...ns("D", 3)
         ),
-        posNumber(2.5)
+        seconds(2.5)
       ),
       [["A"], ["A", "B"], ["A", "B", "C"], ["B", "C", "D"]],
       done,

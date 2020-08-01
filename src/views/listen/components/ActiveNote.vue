@@ -5,10 +5,13 @@
         <v-row justify="center">
           <v-col v-if="note$">
             <h1 class="display-4">{{ note$.value }}</h1>
-            <h1 class="display-1">octave: {{ note$.octave }}</h1>
-            <h1 class="display-1">cents: {{ Math.round(note$.cents) }}</h1>
-            <h1 class="display-2">clarity: {{ note$.clarity.toFixed(2) }}</h1>
-            <h1 class="display-2">age: {{ note$.age }}</h1>
+            <h2 class="display-1">octave: {{ note$.octave }}</h2>
+            <h2 class="display-1">cents: {{ Math.round(note$.cents) }}</h2>
+            <h2 class="display-1">clarity: {{ note$.clarity.toFixed(2) }}</h2>
+            <h2 class="display-1">age: {{ note$.age.toFixed(2) }}</h2>
+            <h2
+              class="display-1"
+            >average quality: {{ averageQuality$ ? averageQuality$.toFixed(2) : '' }}</h2>
           </v-col>
         </v-row>
       </v-col>
@@ -67,7 +70,8 @@ export default Vue.extend({
     const service: ListenService = this.$props.service;
 
     return {
-      note$: service.state.context.observables.note$
+      note$: service.state.context.observables.note$,
+      averageQuality$: service.state.context.observables.averageQuality$
     };
   }
 });

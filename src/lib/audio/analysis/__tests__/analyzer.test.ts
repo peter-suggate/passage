@@ -1,9 +1,10 @@
 import { allEvents$, expectEvents$ } from "@/lib/testing/rx-testing";
 import { nearestNotes$, recentDistinctNotes$ } from "../analyzer";
-import { Note, posNumber, posInteger } from "@/lib/scales";
+import { Note, posInteger } from "@/lib/scales";
 import { majorScaleSynth } from "../../synth/testing";
 import { AnalyzedNote } from "../analysis-types";
 import { recentDistinctNotesByTime$ } from "../analysis-observables";
+import { seconds } from "@/lib/passage-analysis";
 
 it("returns all expected notes", async (done) => {
   const NOTES_PER_SECOND = 15;
@@ -114,12 +115,12 @@ describe("calculating N last distinct notes", () => {
 });
 
 describe("filtering notes to those within most recent N seconds", () => {
-  it.only("returns first event for very small window length", async (done) => {
+  it("returns first event for very small window length", async (done) => {
     const bpm = 60;
     const synth = await majorScaleSynth(bpm);
 
     expectEvents$<AnalyzedNote[], Note[]>(
-      recentDistinctNotesByTime$(nearestNotes$(synth), posNumber(1)),
+      recentDistinctNotesByTime$(nearestNotes$(synth), seconds(1)),
       [
         ["C"],
         ["C"], // Next note in scale didn't fit inside the window.

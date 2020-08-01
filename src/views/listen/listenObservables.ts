@@ -6,6 +6,7 @@ import {
   closestMatchingPieces$,
   matchedPiece$,
 } from "@/lib/music-recognition/observables";
+import { averagedQuality$ } from "@/lib/passage-analysis/passage-observables";
 
 /**
  * From pitch events produced by the recorder, returns all the observables needed in
@@ -44,6 +45,7 @@ export const listenObservables = (
   return {
     note$,
     recentDistinctNotes$: recentDistinct$,
+    averageQuality$: averagedQuality$(note$),
     closestMatchingPieces$: closestMatching$,
     matchedPiece$: confirmedMatch$,
   };

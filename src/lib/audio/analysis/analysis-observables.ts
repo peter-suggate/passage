@@ -7,7 +7,7 @@ import {
   bufferUntilChanged,
   log,
 } from "./analysis-operators";
-import { PosNumber, posNumber } from "@/lib/scales";
+import { seconds, Seconds } from '@/lib/passage-analysis';
 
 /**
  * Computes a single, distinct note that best represents a consecutive run of note pitches.
@@ -35,7 +35,7 @@ export const distinctNote = (notePitches: AnalyzedNote[]) => {
 
 export const filterTransitionNote = () => filterTransitions(notesAreEqual);
 
-const bufferLastByTime = <T extends { t: number }>(seconds: PosNumber) =>
+const bufferLastByTime = <T extends { t: number }>(seconds: Seconds) =>
   scan<T, T[]>((acc, curr) => {
     acc.push(curr);
 
@@ -59,7 +59,7 @@ export const distinctNote$ = (note$: Observable<AnalyzedNote>) => {
 
 export const recentDistinctNotesByTime$ = (
   note$: Observable<AnalyzedNote>,
-  seconds = posNumber(5)
+  secs = seconds(5)
 ): Observable<AnalyzedNote[]> => {
-  return distinctNote$(note$).pipe(bufferLastByTime(seconds));
+  return distinctNote$(note$).pipe(bufferLastByTime(secs));
 };
