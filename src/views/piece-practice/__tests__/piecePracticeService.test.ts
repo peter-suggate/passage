@@ -42,7 +42,7 @@ function testMachine(optionsIn?: typeof piecePracticeMachine.options.services) {
 it("begins at the section practice", () => {
   const machine = testMachine();
 
-  expect(machine.initialState.value).toBe("initialPlaythrough");
+  expect(machine.initialState.value).toBe("sectionPractice");
 
   expect(machine.context!.piece.piece.name).toBe("Twinkle");
 

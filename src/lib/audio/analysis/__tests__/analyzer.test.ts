@@ -47,6 +47,8 @@ describe("calculating N last distinct notes", () => {
     for (let n = 1; n < 5; n++) {
       synth.tick(synth.produceFrame(n * 1000 - 1));
     }
+
+    synth.complete();
   });
 
   it("keeps only the last N notes", async (done) => {
@@ -75,6 +77,8 @@ describe("calculating N last distinct notes", () => {
     for (let n = 1; n < 12; n++) {
       synth.tick(synth.produceFrame(n * 1000 - 1));
     }
+
+    synth.complete();
   });
 
   it("removes gliding / passing notes because they interfere with music recognition", async (done) => {
@@ -111,19 +115,21 @@ describe("calculating N last distinct notes", () => {
     for (let n = 1; n <= NOTES_PER_SECOND; n++) {
       synth.tick(synth.produceFrame((n * 1000) / NOTES_PER_SECOND - 1));
     }
+
+    synth.complete();
   });
 });
 
 describe("filtering notes to those within most recent N seconds", () => {
-  it("returns first event for very small window length", async (done) => {
+  it("returns last event for small window length", async (done) => {
     const bpm = 60;
     const synth = await majorScaleSynth(bpm);
 
     expectEvents$<AnalyzedNote[], Note[]>(
-      recentDistinctNotesByTime$(nearestNotes$(synth), seconds(1)),
+      recentDistinctNotesByTime$(nearestNotes$(synth), seconds(0.9)),
       [
         ["C"],
-        ["C"], // Next note in scale didn't fit inside the window.
+        ["D"], // Previous note in scale didn't fit inside the window.
       ],
       done,
       undefined,
@@ -135,6 +141,8 @@ describe("filtering notes to those within most recent N seconds", () => {
 
     // Produce second note.
     synth.tick(synth.produceFrame(1999));
+
+    synth.complete();
   });
 
   it("keeps only the last N notes", async (done) => {
@@ -163,6 +171,8 @@ describe("filtering notes to those within most recent N seconds", () => {
     for (let n = 1; n < 12; n++) {
       synth.tick(synth.produceFrame(n * 1000 - 1));
     }
+
+    synth.complete();
   });
 
   it("removes gliding / passing notes because they interfere with music recognition", async (done) => {
@@ -199,5 +209,7 @@ describe("filtering notes to those within most recent N seconds", () => {
     for (let n = 1; n <= NOTES_PER_SECOND; n++) {
       synth.tick(synth.produceFrame((n * 1000) / NOTES_PER_SECOND - 1));
     }
+
+    synth.complete();
   });
 });

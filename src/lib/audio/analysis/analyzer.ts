@@ -10,7 +10,7 @@ import { cast } from "@/lib/testing/partial-impl";
 import { AudioPitchEvent, AudioOnsetEvent } from "../audio-types";
 import { frequencyToNearestNote } from "./nearestNote";
 import { AnalyzedNote } from "./analysis-types";
-import { filterTransitions } from "./analysis-operators";
+import { filterTransitions, notesAreEqual } from "./analysis-operators";
 import { posInteger } from "@/lib/scales";
 
 type PartitionedEvents = [AudioRecorderEventTypes, AudioRecorderEventTypes];
@@ -82,8 +82,8 @@ export const nearestNotes$ = (
 
 export const distinctNotes$ = (nearestNotes$: Observable<AnalyzedNote>) => {
   return nearestNotes$.pipe(
-    filterTransitions(),
-    distinctUntilChanged((x, y) => x.value === y.value)
+    filterTransitions(notesAreEqual),
+    distinctUntilChanged(notesAreEqual)
   );
 };
 
@@ -92,8 +92,8 @@ export const recentDistinctNotes$ = (
   N = posInteger(20)
 ) => {
   return nearestNotes$.pipe(
-    filterTransitions(),
-    distinctUntilChanged((x, y) => x.value === y.value),
+    filterTransitions(notesAreEqual),
+    distinctUntilChanged(notesAreEqual),
     bufferLast(N)
   );
 };

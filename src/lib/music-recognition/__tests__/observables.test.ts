@@ -24,5 +24,7 @@ describe("detecting closest music piece/scale from recorded notes", () => {
     for (let n = 1; n < NOTES + 1; n++) {
       synth.tick(synth.produceFrame(n * 1000 - 1));
     }
+
+    synth.complete();
   });
 });
