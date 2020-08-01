@@ -9,6 +9,7 @@
     "test:e2e": "vue-cli-service test:e2e",
     "lint": "vue-cli-service lint",
     "install-assets": "xcopy /E /Y /I .\\node_modules\\music-analyzer-wasm-rs\\* .\\public\\music-analyzer-wasm-rs",
+    "install-assets-mac": "cp -R ./node_modules/music-analyzer-wasm-rs ./public/music-analyzer-wasm-rs",
     "test:watch": "vue-cli-service test:unit --watch",
     "update-deps": "yarn upgrade music-analyzer-wasm-rs"
   },
