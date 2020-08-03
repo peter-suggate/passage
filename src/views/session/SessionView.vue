@@ -2,10 +2,10 @@
   <div class="listen">
     <v-container id="triggerListen">
       <v-row class="text-center">
-        <v-col v-if="listenService" class="mb-4">
-          <ActiveNote style="height: 40vh" :service="listenService" />
-          <NoteHistory style="height: 20vh" :service="listenService" />
-          <ClosestMatches style="height: 20vh" :service="listenService" />
+        <v-col v-if="sessionService" class="mb-4">
+          <ActiveNote style="height: 40vh" :service="sessionService" />
+          <NoteHistory style="height: 20vh" :service="sessionService" />
+          <ClosestMatches style="height: 20vh" :service="sessionService" />
           <br />
           <v-btn v-on:click="finished">Finished</v-btn>
         </v-col>
@@ -20,42 +20,42 @@ import ActiveNote from "./components/ActiveNote.vue";
 import NoteHistory from "./components/NoteHistory.vue";
 import ClosestMatches from "./components/ClosestMatches.vue";
 import { AppService } from "../../appService";
-import { ListenService } from "./listenService";
+import { SessionService } from "./sessionService";
 
 export default Vue.extend({
-  name: "ListenView",
+  name: "SessionView",
 
   props: {
-    appService: Object
+    appService: Object,
   },
 
   components: {
     ActiveNote,
     NoteHistory,
-    ClosestMatches
+    ClosestMatches,
   },
 
   data: () =>
     ({
       observer: undefined,
-      listenService: undefined
+      sessionService: undefined,
     } as {
       observer: undefined | IntersectionObserver;
-      listenService: undefined | ListenService;
+      sessionService: undefined | SessionService;
     }),
 
   created() {
     const appService: AppService = this.$props.appService;
 
-    appService.onTransition(state => {
+    appService.onTransition((state) => {
       switch (state.value) {
         case "running":
-          this.listenService = (appService.children.get(
+          this.sessionService = (appService.children.get(
             "running"
-          ) as unknown) as ListenService;
+          ) as unknown) as SessionService;
           break;
         default:
-          this.listenService = undefined;
+          this.sessionService = undefined;
           break;
       }
     });
@@ -64,8 +64,8 @@ export default Vue.extend({
   mounted() {
     const appService: AppService = this.$props.appService;
 
-    const callback: IntersectionObserverCallback = entries => {
-      entries.forEach(entry => {
+    const callback: IntersectionObserverCallback = (entries) => {
+      entries.forEach((entry) => {
         if (entry.isIntersecting) {
           appService.send("RESUME");
         }
@@ -74,7 +74,7 @@ export default Vue.extend({
 
     this.observer = new IntersectionObserver(callback, {
       root: null,
-      threshold: 0.5
+      threshold: 0.5,
     });
 
     const target = document.querySelector("#triggerListen");
@@ -82,11 +82,11 @@ export default Vue.extend({
   },
 
   methods: {
-    finished: function() {
+    finished: function () {
       const appService: AppService = this.$props.appService;
 
       appService.send("STOP");
-    }
-  }
+    },
+  },
 });
 </script>

@@ -21,17 +21,17 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { ListenService } from "../listenService";
+import { SessionService } from "../sessionService";
 
 type Props = {
-  service: ListenService;
+  service: SessionService;
 };
 
 export default Vue.extend({
   name: "ActiveNote",
 
   props: {
-    service: Object
+    service: Object,
   },
 
   // created() {
@@ -66,13 +66,13 @@ export default Vue.extend({
     //   .onEvent((event) => console.log("PRODUCT EVENT", event));
   },
 
-  subscriptions: function(this) {
-    const service: ListenService = this.$props.service;
+  subscriptions: function (this) {
+    const service: SessionService = this.$props.service;
 
     return {
       note$: service.state.context.observables.note$,
-      averageQuality$: service.state.context.observables.averageQuality$
+      averageQuality$: service.state.context.observables.averageQuality$,
     };
-  }
+  },
 });
 </script>

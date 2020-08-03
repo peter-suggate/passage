@@ -2,7 +2,7 @@ import { interpret } from "xstate";
 import { appMachine, AppServiceContext } from "../appService";
 import { audioSetupMachine } from "@/views/setup-audio";
 import { resumeAudio, suspendAudio } from "@/lib/audio/audioEffects";
-import { listenMachine } from "@/views/listen/listenService";
+import { sessionMachine } from "@/views/session/sessionService";
 import { setupSynthesizerMachine } from "@/views/setup-synth";
 
 function testMachine(optionsIn?: typeof appMachine.options.services) {
@@ -10,7 +10,7 @@ function testMachine(optionsIn?: typeof appMachine.options.services) {
     audioSetup: (context: AppServiceContext) => audioSetupMachine,
     resume: (context: AppServiceContext) => resumeAudio(context.audio!),
     suspend: (context: AppServiceContext) => suspendAudio(context.audio!),
-    analyzer: () => listenMachine,
+    analyzer: () => sessionMachine,
     setupSynthesizer: () => setupSynthesizerMachine,
     ...optionsIn,
   };

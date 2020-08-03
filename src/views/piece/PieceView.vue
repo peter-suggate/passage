@@ -2,8 +2,8 @@
   <div class="listen">
     <v-container id="triggerListen">
       <v-row class="text-center">
-        <v-col v-if="piecePracticeService" class="mb-4">
-          <ActiveNote style="height: 40vh" :service="piecePracticeService" />
+        <v-col v-if="pieceService" class="mb-4">
+          <ActiveNote style="height: 40vh" :service="pieceService" />
           <br />
           <v-btn v-on:click="finished">Finished</v-btn>
         </v-col>
@@ -17,41 +17,41 @@ import Vue from "vue";
 import ActiveNote from "./components/ActiveNote.vue";
 import NoteHistory from "./components/NoteHistory.vue";
 import ClosestMatches from "./components/ClosestMatches.vue";
-import { ListenService } from "../listen/listenService";
-import { PiecePracticeService } from "./piecePracticeService";
+import { SessionService } from "../session/sessionService";
+import { PieceService } from "./pieceService";
 
 export default Vue.extend({
-  name: "ListenView",
+  name: "SessionView",
 
   props: {
-    appService: Object
+    appService: Object,
   },
 
   components: {
-    ActiveNote
+    ActiveNote,
   },
 
   data: () =>
     ({
       observer: undefined,
-      piecePracticeService: undefined
+      pieceService: undefined,
     } as {
       observer: undefined | IntersectionObserver;
-      piecePracticeService: undefined | PiecePracticeService;
+      pieceService: undefined | PieceService;
     }),
 
   created() {
-    const listenService: ListenService = this.$props.listenService;
+    const sessionService: SessionService = this.$props.sessionService;
 
-    // listenService.onTransition(state => {
+    // sessionService.onTransition(state => {
     //   switch (state.value) {
     //     case "running":
-    //       this.piecePracticeService = (appService.children.get(
+    //       this.pieceService = (appService.children.get(
     //         "running"
-    //       ) as unknown) as ListenService;
+    //       ) as unknown) as SessionService;
     //       break;
     //     default:
-    //       this.listenService = undefined;
+    //       this.sessionService = undefined;
     //       break;
     //   }
     // });
@@ -75,10 +75,10 @@ export default Vue.extend({
   },
 
   methods: {
-    finished: function() {
+    finished: function () {
       // const appService: AppService = this.$props.appService;
       // appService.send("STOP");
-    }
-  }
+    },
+  },
 });
 </script>

@@ -50,6 +50,11 @@ export const MELODIC_MINOR_SCALE = PhraseBuilder()
   .down()
   .push("A#", "G#", "G", "F", "D#", "D", "C");
 
+export const piece = (name: string, builder = TWINKLE): Piece => ({
+  name,
+  notes: builder.noteDeltas,
+});
+
 export const musicBank = (): MusicBank =>
   [
     { name: "Twinkle", builder: TWINKLE },
@@ -58,3 +63,11 @@ export const musicBank = (): MusicBank =>
     { name: "Harmonic Minor Scale", builder: HARMONIC_MINOR_SCALE },
     { name: "Melodic Minor Scale", builder: MELODIC_MINOR_SCALE },
   ].map(({ name, builder }) => ({ name, notes: builder.noteDeltas }));
+
+export const lookupPiece = (name: string): Piece => {
+  const match = musicBank().find((piece) => piece.name === name);
+
+  if (!match) throw Error(`No piece of name: ${name} in music bank.`);
+
+  return match;
+};

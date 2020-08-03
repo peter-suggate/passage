@@ -4,13 +4,12 @@ import {
   recentDistinctNotesByTime$,
   filterTransitionNote,
 } from "../analysis-observables";
-import { AnalyzedNote } from "../analysis-types";
+import { AnalyzedNote, makeNote } from "../analysis-types";
 import { majorScaleSynth } from "../../synth/testing";
 import { expectEvents$ } from "@/lib/testing/rx-testing";
-import { Note } from "@/lib/scales";
+import { Note, seconds } from "@/lib/scales";
 import { nearestNotes$ } from "../analyzer";
 import { of } from "rxjs";
-import { seconds } from "@/lib/passage-analysis";
 
 describe("calculating representative distinct note from a consecutive run of pitches", () => {
   it("returns correct note when there's only one pitch", () => {
@@ -78,20 +77,6 @@ describe("calculating representative distinct note from a consecutive run of pit
       ]).t
     ).toBe(0.3);
   });
-});
-
-const makeNote = (
-  value: Note = "A",
-  t = 0,
-  cents = 0,
-  clarity = 0.9
-): AnalyzedNote => ({
-  age: t,
-  cents,
-  clarity,
-  octave: 4,
-  t,
-  value,
 });
 
 describe("filtering out intermediate passing notes between plateaus", () => {

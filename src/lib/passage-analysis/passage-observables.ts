@@ -1,18 +1,8 @@
 import { Observable } from "rxjs";
 import { AnalyzedNote } from "../audio/analysis";
-import { Passage } from "./passage-types";
 import { recentDistinctNotesByTime$ } from "../audio/analysis/analysis-observables";
-import { PosNumber, PosInteger, posInteger } from "../scales";
-import { Opaque } from "../fp-util/opaque";
-import { scan, map } from "rxjs/operators";
-
-export type Seconds = Opaque<"Seconds", number>;
-
-export const seconds = (value: number): Seconds => {
-  if (value < 0) throw Error("A value in seconds must be > 0");
-
-  return value as Seconds;
-};
+import { PosInteger, Seconds, seconds } from "../scales";
+import { map } from "rxjs/operators";
 
 export type TroubleSpotDetectorOptions = {
   maxLengthSecs: Seconds;

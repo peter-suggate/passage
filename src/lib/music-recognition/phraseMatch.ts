@@ -1,5 +1,5 @@
 import { NoteDelta } from "./noteDeltas";
-import { MusicBank } from "./musicBank";
+import { MusicBank, Piece } from "./musicBank";
 import { NonNegInteger, nonNegInteger } from "../scales";
 /* eslint-disable @typescript-eslint/no-var-requires */
 const { editDistanceForClosestMatch } = require("edit-distance-search");
@@ -12,20 +12,22 @@ export const phraseMatch = (
 };
 
 export const pieceMatch = (phrase: NoteDelta[], bank: MusicBank) => {
-  const closest = bank.reduce(
+  const closest = bank.reduce<{ distance: number; piece?: Piece }>(
     (memo, cur) => {
       const distance = phraseMatch(phrase, cur.notes);
 
       if (distance < memo.distance) {
-        return { distance: nonNegInteger(distance), name: cur.name };
+        return { distance: nonNegInteger(distance), piece: cur };
       }
 
       return memo;
     },
-    { distance: nonNegInteger(phrase.length), name: "" }
+    { distance: nonNegInteger(phrase.length), piece: undefined }
   );
 
-  return closest;
+  // Assume the music bank always has at least one piece in it so we can always
+  // find a match.
+  return closest as { distance: number; piece: Piece };
 };
 
 export type MatchedPiece = ReturnType<typeof pieceMatch>;

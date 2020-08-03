@@ -23,9 +23,9 @@
 //   },
 //   {
 //     path: Routes.Listen,
-//     name: "ListenView",
+//     name: "SessionView",
 //     // component: Listen,
-//     component: () => import("../views/listen/ListenView.vue"),
+//     component: () => import("../views/session/SessionView.vue"),
 //   },
 // ];
 

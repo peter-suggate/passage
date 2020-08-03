@@ -7,7 +7,7 @@ import {
   bufferUntilChanged,
   log,
 } from "./analysis-operators";
-import { seconds, Seconds } from '@/lib/passage-analysis';
+import { seconds, Seconds } from "@/lib/scales";
 
 /**
  * Computes a single, distinct note that best represents a consecutive run of note pitches.

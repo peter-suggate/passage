@@ -1,25 +1,26 @@
 import { createMachine, interpret } from "xstate";
+import { PiecePracticeObservables, pieceObservables } from "./pieceObservables";
+import { SessionObservables } from "../session/sessionObservables";
+import { MatchedPiece } from "@/lib/music-recognition";
 import {
-  PiecePracticeObservables,
-  piecePracticeObservables,
-} from "./piecePracticeObservables";
-import { ListenObservables } from "../listen/listenObservables";
-import {
-  PracticePiece,
-  initPracticePiece,
-} from "@/lib/passage-analysis/practice-pieces";
-import { Piece } from "@/lib/music-recognition";
+  initRecordedPiece,
+  RecordedSession,
+  RecordedPiece,
+} from "@/lib/passage-analysis";
+import { AnalyzedNote } from "@/lib/audio/analysis";
 
-export const initPiecePracticeContext = (
-  piece: Piece,
-  listenObservables: ListenObservables
+export const initPieceContext = (
+  session: RecordedSession,
+  match: MatchedPiece,
+  notes: AnalyzedNote[],
+  sessionObservables: SessionObservables
 ): PiecePracticeContext => ({
-  piece: initPracticePiece(piece),
-  observables: piecePracticeObservables(listenObservables),
+  piece: initRecordedPiece(session, match, notes),
+  observables: pieceObservables(sessionObservables),
 });
 
 export type PiecePracticeContext = {
-  piece: PracticePiece;
+  piece: RecordedPiece;
   observables: PiecePracticeObservables;
 };
 
@@ -82,4 +83,4 @@ export const makePiecePracticeService = () =>
     .onTransition((state) => console.log(state.value, state.context))
     .start();
 
-export type PiecePracticeService = ReturnType<typeof makePiecePracticeService>;
+export type PieceService = ReturnType<typeof makePiecePracticeService>;

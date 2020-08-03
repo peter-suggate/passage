@@ -1,4 +1,4 @@
-const { editDistanceForClosestMatch } = require("edit-distance-search");
+// const { editDistanceForClosestMatch } = require("edit-distance-search");
 import { NoteDelta } from "./noteDeltas";
 import { MatchedPiece } from "./phraseMatch";
 
@@ -15,5 +15,13 @@ export const extractPieceFromNotes = (
   notes: NoteDelta[],
   piece: MatchedPiece
 ) => {
-  editDistanceForClosestMatch();
+  // TODO perform a trace back.
+  // editDistanceForClosestMatch();
+
+  return {
+    indexOfFirstNote: 0,
+    notes,
+  };
 };
+
+export type ExtractedPiece = ReturnType<typeof extractPieceFromNotes>;

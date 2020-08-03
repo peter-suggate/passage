@@ -14,26 +14,26 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { ListenService } from "../listenService";
+import { SessionService } from "../sessionService";
 
 type Props = {
-  service: ListenService;
+  service: SessionService;
 };
 
 export default Vue.extend({
   name: "NoteHistory",
 
   props: {
-    service: Object
+    service: Object,
   },
 
-  subscriptions: function(this) {
-    const service: ListenService = this.$props.service;
+  subscriptions: function (this) {
+    const service: SessionService = this.$props.service;
 
     return {
       closestMatchingPieces$:
-        service.state.context.observables.closestMatchingPieces$
+        service.state.context.observables.closestMatchingPieces$,
     };
-  }
+  },
 });
 </script>

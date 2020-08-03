@@ -31,7 +31,7 @@ describe("finding closest matching piece to a phrase", () => {
       pieceMatch(
         PhraseBuilder().push("D", "E", "F#", "G").noteDeltas,
         musicBank()
-      ).name
+      ).piece.name
     ).toBe("Major Scale");
   });
 
@@ -40,7 +40,7 @@ describe("finding closest matching piece to a phrase", () => {
       pieceMatch(
         PhraseBuilder().push("D", "E", "F", "G", "A", "A#").noteDeltas,
         musicBank()
-      ).name
+      ).piece.name
     ).toBe("Harmonic Minor Scale");
   });
 });

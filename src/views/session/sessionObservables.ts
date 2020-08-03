@@ -14,7 +14,7 @@ import { averagedQuality$ } from "@/lib/passage-analysis/passage-observables";
  *
  * @param events$ Observable of audio events produced by the recorder.
  */
-export const listenObservables = (
+export const sessionObservables = (
   note$: Observable<AnalyzedNote>
   // note$ = nearestNotes$(recordedEvents$);
   // recordedEvents$: Observable<AudioRecorderEventTypes>
@@ -51,4 +51,4 @@ export const listenObservables = (
   };
 };
 
-export type ListenObservables = ReturnType<typeof listenObservables>;
+export type SessionObservables = ReturnType<typeof sessionObservables>;

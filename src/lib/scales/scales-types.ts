@@ -44,6 +44,30 @@ export const posNumber = (value: number): PosNumber => {
   return value as PosNumber;
 };
 
+export type Seconds = Opaque<"Seconds", number>;
+
+export const seconds = (value: number): Seconds => {
+  if (value < 0) throw Error("A value in seconds must be >= 0");
+
+  return value as Seconds;
+};
+
+export type TimePos = Date;
+
+export type RelativeTimePos = { from: TimePos; offset: Seconds };
+
+export const relativeTimePos = (
+  from: TimePos,
+  value: number
+): RelativeTimePos => {
+  if (value < 0) throw Error("Must be >= 0");
+
+  return {
+    from,
+    offset: seconds(value),
+  };
+};
+
 export type ScaleHalftone = Opaque<"ScaleTone", number>;
 
 export const scaleHalftone = (

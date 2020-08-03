@@ -3,7 +3,7 @@ import { withLatestFrom, map, startWith } from "rxjs/operators";
 import HomeView from "@/views/home/HomeView.vue";
 import SetupView from "@/views/setup-audio/SetupView.vue";
 import SetupSynthView from "@/views/setup-synth/SetupSynthView.vue";
-import ListenView from "@/views/listen/ListenView.vue";
+import SessionView from "@/views/session/SessionView.vue";
 import { AppState, App$ } from "@/appService";
 import {
   scrollNormal,
@@ -19,14 +19,14 @@ export type LayoutViews = {
   Home: typeof HomeView;
   Setup: typeof SetupView;
   SetupSynthView: typeof SetupSynthView;
-  Listen: typeof ListenView;
+  Listen: typeof SessionView;
 };
 
 export const layoutViews = {
   Home: HomeView,
   Setup: SetupView,
   SetupSynthView,
-  Listen: ListenView,
+  Listen: SessionView,
 };
 
 export type LayoutConfig = {

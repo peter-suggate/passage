@@ -1,10 +1,9 @@
 import { allEvents$, expectEvents$ } from "@/lib/testing/rx-testing";
 import { nearestNotes$, recentDistinctNotes$ } from "../analyzer";
-import { Note, posInteger } from "@/lib/scales";
+import { Note, posInteger, seconds } from "@/lib/scales";
 import { majorScaleSynth } from "../../synth/testing";
 import { AnalyzedNote } from "../analysis-types";
 import { recentDistinctNotesByTime$ } from "../analysis-observables";
-import { seconds } from "@/lib/passage-analysis";
 
 it("returns all expected notes", async (done) => {
   const NOTES_PER_SECOND = 15;

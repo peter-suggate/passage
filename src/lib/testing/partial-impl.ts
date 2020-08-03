@@ -14,7 +14,7 @@
  */
 export function partialImpl<Interface>(impl?: Partial<Interface>): Interface {
   return ({
-    ...impl
+    ...impl,
   } as Partial<Interface>) as Interface;
 }
 
@@ -29,6 +29,6 @@ export function emptyImpl<Interface>(): Interface {
  *
  * @param obj The object to cast from
  */
-export function cast<Interface, U = {}>(obj: U): Interface {
+export function cast<Interface, U = unknown>(obj: U): Interface {
   return (obj as unknown) as Interface;
 }
