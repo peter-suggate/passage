@@ -16,4 +16,4 @@ export const pieceObservables = (sessionObservables: SessionObservables) => {
   };
 };
 
-export type PiecePracticeObservables = ReturnType<typeof pieceObservables>;
+export type PieceObservables = ReturnType<typeof pieceObservables>;

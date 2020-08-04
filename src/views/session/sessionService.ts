@@ -73,11 +73,9 @@ export const sessionMachine = createMachine<SessionContext, Event, ListenState>(
       piece: {
         invoke: {
           src: "practicePiece",
-          data: (context: SessionContext, event) =>
+          data: (context: SessionContext) =>
             initPieceContext(
-              context.session,
-              event.match,
-              event.notes,
+              context.session.pieces[context.session.pieces.length - 1],
               context.observables
             ),
           onDone: {

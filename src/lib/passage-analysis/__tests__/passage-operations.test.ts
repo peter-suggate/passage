@@ -1,6 +1,5 @@
-import { initRecordingSession, initRecordedPiece } from "../passage-operations";
+import { initRecordedPiece } from "../passage-operations";
 import { TWINKLE, lookupPiece } from "@/lib/music-recognition";
-import { PhraseBuilder } from "@/lib/music-recognition/PhraseBuilder";
 import { makeNote } from "@/lib/audio/analysis";
 
 describe("starting a new recording session", () => {});
@@ -10,7 +9,7 @@ describe("creating a new recorded piece", () => {
     const twinkle = lookupPiece("Twinkle");
 
     const piece = initRecordedPiece(
-      initRecordingSession(),
+      new Date(),
       { distance: 0, piece: twinkle },
       TWINKLE.noteNames.map((note) => makeNote(note))
     );

@@ -1,27 +1,19 @@
 import { createMachine, interpret } from "xstate";
-import { PiecePracticeObservables, pieceObservables } from "./pieceObservables";
+import { PieceObservables, pieceObservables } from "./pieceObservables";
 import { SessionObservables } from "../session/sessionObservables";
-import { MatchedPiece } from "@/lib/music-recognition";
-import {
-  initRecordedPiece,
-  RecordedSession,
-  RecordedPiece,
-} from "@/lib/passage-analysis";
-import { AnalyzedNote } from "@/lib/audio/analysis";
+import { RecordedPiece } from "@/lib/passage-analysis";
 
 export const initPieceContext = (
-  session: RecordedSession,
-  match: MatchedPiece,
-  notes: AnalyzedNote[],
+  piece: RecordedPiece,
   sessionObservables: SessionObservables
-): PiecePracticeContext => ({
-  piece: initRecordedPiece(session, match, notes),
+): PieceContext => ({
+  piece,
   observables: pieceObservables(sessionObservables),
 });
 
-export type PiecePracticeContext = {
+export type PieceContext = {
   piece: RecordedPiece;
-  observables: PiecePracticeObservables;
+  observables: PieceObservables;
 };
 
 type Event =
@@ -29,16 +21,16 @@ type Event =
   | { type: "NOTE_PLAYED_AFTER_LONG_PAUSE" }
   | { type: "LAST_PIECE_NOTE_PLAYED" };
 
-type ValidPiecePracticeStates = "sectionPractice" | "waiting";
+type ValidPieceStates = "sectionPractice" | "waiting";
 
-export type PiecePracticeState = {
-  context: PiecePracticeContext;
-} & { value: ValidPiecePracticeStates };
+export type PieceState = {
+  context: PieceContext;
+} & { value: ValidPieceStates };
 
 export const piecePracticeMachine = createMachine<
-  PiecePracticeContext,
+  PieceContext,
   Event,
-  PiecePracticeState
+  PieceState
 >(
   {
     id: "PiecePractice",
@@ -78,9 +70,9 @@ export const piecePracticeMachine = createMachine<
 );
 
 // Machine instance with internal state
-export const makePiecePracticeService = () =>
+export const makePieceService = () =>
   interpret(piecePracticeMachine)
     .onTransition((state) => console.log(state.value, state.context))
     .start();
 
-export type PieceService = ReturnType<typeof makePiecePracticeService>;
+export type PieceService = ReturnType<typeof makePieceService>;

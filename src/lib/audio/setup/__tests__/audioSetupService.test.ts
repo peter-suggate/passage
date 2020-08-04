@@ -18,24 +18,24 @@ it("is initially in detecting audio state", () => {
   expect(machine.initialState.matches("detectingAudio"));
 });
 
-xtest("when setting up audio fails, escalates error to parent", async (done) => {
-  const machine = testMachine({
-    initBrowserAudio: async () => {
-      throw Error("no mic available");
-    },
-  });
+// xtest("when setting up audio fails, escalates error to parent", async (done) => {
+//   const machine = testMachine({
+//     initBrowserAudio: async () => {
+//       throw Error("no mic available");
+//     },
+//   });
 
-  try {
-    interpret(machine)
-      // .onTransition((state) => {
-      //   if (state.matches("noAudioFound")) {
-      //     done();
-      //   }
-      // })
-      .start();
-  } catch (e) {
-    expect(e).toMatchInlineSnapshot();
+//   try {
+//     interpret(machine)
+//       // .onTransition((state) => {
+//       //   if (state.matches("noAudioFound")) {
+//       //     done();
+//       //   }
+//       // })
+//       .start();
+//   } catch (e) {
+//     expect(e).toMatchInlineSnapshot();
 
-    done();
-  }
-});
+//     done();
+//   }
+// });

@@ -1,14 +1,32 @@
 import { NoteDelta } from "./noteDeltas";
 import { MusicBank, Piece } from "./musicBank";
 import { NonNegInteger, nonNegInteger } from "../scales";
-/* eslint-disable @typescript-eslint/no-var-requires */
-const { editDistanceForClosestMatch } = require("edit-distance-search");
+import {
+  editDistanceForClosestMatch,
+  editDistanceBacktrack,
+  BacktrackResult,
+  EditDistanceGrid,
+} from "edit-distance-search";
 
 export const phraseMatch = (
   phrase: NoteDelta[],
-  piece: NoteDelta[]
+  piece: NoteDelta[],
+  info: { grid: EditDistanceGrid<number> | undefined } = { grid: undefined }
 ): NonNegInteger => {
-  return editDistanceForClosestMatch(piece.join(" "), phrase.join(" "));
+  return nonNegInteger(editDistanceForClosestMatch(piece, phrase, info));
+};
+
+export const phraseMatchWithAlignment = (
+  phrase: NoteDelta[],
+  piece: NoteDelta[]
+): BacktrackResult<number> => {
+  const info: { grid: EditDistanceGrid<number> | undefined } = {
+    grid: undefined,
+  };
+  const pieceText = piece;
+  const phraseText = phrase;
+  const distance = editDistanceForClosestMatch(pieceText, phraseText, info);
+  return editDistanceBacktrack(pieceText, phraseText, distance, info.grid!);
 };
 
 export const pieceMatch = (phrase: NoteDelta[], bank: MusicBank) => {

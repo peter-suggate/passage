@@ -3,7 +3,10 @@ import { TWINKLE, lookupPiece } from "@/lib/music-recognition";
 import { sessionObservables } from "@/views/session/sessionObservables";
 import { makeNotes } from "@/lib/audio/analysis";
 import { of } from "rxjs";
-import { initRecordingSession } from "@/lib/passage-analysis";
+import {
+  initRecordingSession,
+  initRecordedPiece,
+} from "@/lib/passage-analysis";
 
 function testMachine(optionsIn?: typeof piecePracticeMachine.options.services) {
   const options = {
@@ -18,12 +21,14 @@ function testMachine(optionsIn?: typeof piecePracticeMachine.options.services) {
     })
     .withContext(
       initPieceContext(
-        initRecordingSession(),
-        {
-          distance: 0,
-          piece: lookupPiece("Twinkle"),
-        },
-        notes,
+        initRecordedPiece(
+          new Date(),
+          {
+            distance: 0,
+            piece: lookupPiece("Twinkle"),
+          },
+          notes
+        ),
         sessionObservables(of(...notes))
       )
     );

@@ -1,4 +1,8 @@
-import { MatchedPiece, lookupPiece } from "@/lib/music-recognition";
+import {
+  MatchedPiece,
+  lookupPiece,
+  phraseMatchWithAlignment,
+} from "@/lib/music-recognition";
 import { RecordedSession, RecordedPiece } from "./passage-types";
 import { AnalyzedNote } from "../audio/analysis";
 import { extractPieceFromNotes } from "../music-recognition/extractPieceFromNotes";
@@ -19,7 +23,7 @@ export const addPieceToSession = (
 ): RecordedSession => ({
   ...session,
 
-  pieces: [...session.pieces, initRecordedPiece(session, match, notes)],
+  pieces: [...session.pieces, initRecordedPiece(session.start, match, notes)],
 });
 
 /**
@@ -31,10 +35,15 @@ export const addPieceToSession = (
  * includes notes also not in the piece.
  */
 export const initRecordedPiece = (
-  session: RecordedSession,
+  sessionStart: Date,
   match: MatchedPiece,
   recentDistinctNotes: AnalyzedNote[]
 ): RecordedPiece => {
+  phraseMatchWithAlignment(
+    noteDeltasFromNames(recentDistinctNotes.map((n) => n.value)),
+    match.piece.notes
+  );
+
   const { indexOfFirstNote /*, notes*/ } = extractPieceFromNotes(
     noteDeltasFromNames(recentDistinctNotes.map((n) => n.value)),
     match
@@ -43,7 +52,7 @@ export const initRecordedPiece = (
   const firstNote = recentDistinctNotes[indexOfFirstNote];
 
   return {
-    start: relativeTimePos(session.start, firstNote.t),
+    start: relativeTimePos(sessionStart, firstNote.t),
     piece: lookupPiece(match.piece.name),
     notes: recentDistinctNotes.slice(indexOfFirstNote),
     troubleSpots: [],

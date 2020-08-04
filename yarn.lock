@@ -4023,10 +4023,10 @@ ecc-jsbn@~0.1.1:
     jsbn "~0.1.0"
     safer-buffer "^2.1.0"
 
-edit-distance-search@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/edit-distance-search/-/edit-distance-search-0.1.1.tgz#b54de07ea35329fcb80157842107261aeab561e4"
-  integrity sha512-DEd5LdNNjcfoNjamMD25P+AOk5odnF+TZfE8RL+0fldg542Cp2wOWy1jVsILif42LhI6o+k826fsZDfddiOhCg==
+edit-distance-search@^0.2.3:
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/edit-distance-search/-/edit-distance-search-0.2.3.tgz#dd756a696dd4437d9d8f75992960930ba6884bd4"
+  integrity sha512-0vxmUx5R+v6yLRqR9XHUTvulozs80LMOKFcisz3KopPHO2CqhDu96nPQ3CRM/sYHnpgQO49QQ/PfC6fyh/Sytw==
 
 editorconfig@^0.15.3:
   version "0.15.3"
@@ -5784,9 +5784,9 @@ is-directory@^0.3.1:
   integrity sha1-YTObbyR1/Hcv2cnYP1yFddwVSuE=
 
 is-docker@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/is-docker/-/is-docker-2.0.0.tgz#2cb0df0e75e2d064fe1864c37cdeacb7b2dcf25b"
-  integrity sha512-pJEdRugimx4fBMra5z2/5iRdZ63OhYV0vr0Dwm5+xtW4D1FvRkB8hamMIhnWfyJeDdyr/aa7BDyNbtG38VxgoQ==
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/is-docker/-/is-docker-2.1.0.tgz#25dc043e4fdc3cf969d622735e05a86ba9952e2b"
+  integrity sha512-mB2WygGsSeoXtLKpSYzP6sa0Z9DyU9ZyKlnvuZWxCociaI0qsF8u12sR72DFTX236g1u6oWSWYFuUk09nGQEjg==
 
 is-extendable@^0.1.0, is-extendable@^0.1.1:
   version "0.1.1"
@@ -7718,9 +7718,9 @@ onetime@^2.0.0:
     mimic-fn "^1.0.0"
 
 onetime@^5.1.0:
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/onetime/-/onetime-5.1.0.tgz#fff0f3c91617fe62bb50189636e99ac8a6df7be5"
-  integrity sha512-5NcSkPHhwTVFIQN+TUqXoS5+dlElHXdpAWu9I0HP20YOtIi+aZ0Ct82jdlILDxjLEAWwvm+qj1m6aEtsDVmm6Q==
+  version "5.1.1"
+  resolved "https://registry.yarnpkg.com/onetime/-/onetime-5.1.1.tgz#5c8016847b0d67fcedb7eef254751cfcdc7e9418"
+  integrity sha512-ZpZpjcJeugQfWsfyQlshVoowIIQ1qBGSVll4rfDq6JJVO//fesjoX808hXWfBjY+ROZgpKDI5TRSRBSoJiZ8eg==
   dependencies:
     mimic-fn "^2.1.0"
 

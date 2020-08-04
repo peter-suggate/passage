@@ -1,4 +1,9 @@
-import { phraseMatch, pieceMatch, closestMatches } from "../phraseMatch";
+import {
+  phraseMatch,
+  phraseMatchWithAlignment,
+  pieceMatch,
+  closestMatches,
+} from "../phraseMatch";
 import {
   TWINKLE,
   FRENCH_FOLK_SONG,
@@ -22,7 +27,86 @@ it("returns exact match when correct notes from partway through are used", () =>
 it("returns weak approximate match when phrase from a different piece is used", () => {
   expect(
     phraseMatch(FRENCH_FOLK_SONG.noteDeltas.slice(0, 10), TWINKLE.noteDeltas)
-  ).toBe(5);
+  ).toBe(4);
+});
+
+describe("calculating substitutions required to convert one phrase to another", () => {
+  it("returns empty list when phrases are identical", () => {
+    expect(
+      phraseMatchWithAlignment(
+        TWINKLE.noteDeltas.slice(0, 3),
+        TWINKLE.noteDeltas.slice(0, 3)
+      )
+    ).toEqual({
+      startIndex: 0,
+      alignment: [
+        { type: "match", value: 0 },
+        { type: "match", value: 7 },
+        { type: "match", value: 2 },
+      ],
+    });
+  });
+
+  it("returns correct set of insertions, substitutions and deletions when phrases are not identical", () => {
+    expect(
+      phraseMatchWithAlignment(TWINKLE.noteDeltas.slice(2, 10), [
+        ...TWINKLE.noteDeltas.slice(0, 3),
+        ...TWINKLE.noteDeltas.slice(5, 7),
+        ...TWINKLE.noteDeltas.slice(8, 9),
+      ])
+    ).toMatchInlineSnapshot(`
+      Object {
+        "alignment": Array [
+          Object {
+            "type": "deletion",
+            "value": 2,
+          },
+          Object {
+            "type": "deletion",
+            "value": -2,
+          },
+          Object {
+            "type": "deletion",
+            "value": -2,
+          },
+          Object {
+            "type": "deletion",
+            "value": -1,
+          },
+          Object {
+            "type": "deletion",
+            "value": -2,
+          },
+          Object {
+            "from": -2,
+            "to": 0,
+            "type": "substitution",
+          },
+          Object {
+            "type": "match",
+            "value": 7,
+          },
+          Object {
+            "type": "insertion",
+            "value": 2,
+          },
+          Object {
+            "type": "insertion",
+            "value": -1,
+          },
+          Object {
+            "type": "match",
+            "value": -2,
+          },
+          Object {
+            "type": "insertion",
+            "value": 7,
+          },
+        ],
+        "startIndex": 0,
+      }
+    `);
+  });
 });
 
 describe("finding closest matching piece to a phrase", () => {
@@ -71,7 +155,7 @@ describe("finding multiple closest matches", () => {
           "name": "Melodic Minor Scale",
         },
         Object {
-          "distance": 3,
+          "distance": 2,
           "name": "Harmonic Minor Scale",
         },
       ]
