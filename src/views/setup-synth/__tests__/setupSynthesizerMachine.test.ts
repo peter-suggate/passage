@@ -21,16 +21,38 @@ it("has useful initial synth config", () => {
   expect(machine.initialState.context).toMatchInlineSnapshot(`
     Object {
       "config": Object {
-        "bpm": 60,
         "instrument": "bell",
-        "scaleType": Object {
-          "octaves": 1,
-          "scale": Object {
-            "mode": "major",
-            "tonic": "A",
-          },
-          "startOctave": 3,
+        "piece": Object {
+          "name": "Twinkle",
+          "notes": Array [
+            0,
+            7,
+            2,
+            -2,
+            -2,
+            -1,
+            -2,
+            -2,
+            7,
+            -2,
+            -1,
+            -2,
+            5,
+            -2,
+            -1,
+            -2,
+            -2,
+            7,
+            2,
+            -2,
+            -2,
+            -1,
+            -2,
+            -2,
+          ],
         },
+        "startNote": "A",
+        "startTime": 0,
       },
       "node": undefined,
     }

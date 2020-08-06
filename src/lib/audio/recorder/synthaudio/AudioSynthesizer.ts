@@ -1,6 +1,5 @@
 import { Subject, of, Subscription } from "rxjs";
-import { AudioRecorderEventTypes, Suspendable } from "../recorder-types";
-import { noteToFrequency } from "@/lib/audio/analysis";
+import { AudioRecorderEventTypes } from "../recorder-types";
 import init, {
   AudioSamplesProcessor,
   PitchDetector,
@@ -8,38 +7,14 @@ import init, {
 import { SynthesizerConfig } from "../../synth/synth-types";
 import { animationFrame } from "rxjs/internal/scheduler/animationFrame";
 import { repeat, map } from "rxjs/operators";
-import {
-  generateScaleHalftones,
-  halftonesFromConcertA,
-} from "@/lib/scales/generateScaleHalftones";
-import { OctavesScale, Bpm, ScaleHalftone } from "@/lib/scales";
 import { Pitch } from "music-analyzer-wasm-rs";
+import { makePitchProducerService } from "./pitchProducerService";
+import { nonNegInteger } from "@/lib/scales";
+import { PitchProducerConfig } from "./PitchProducer";
 
 function isTest() {
   return process.env.JEST_WORKER_ID !== undefined;
 }
-
-const bpmToMsPerBeat = (bpm: Bpm) => {
-  return (1000 * 60) / bpm;
-};
-
-export const pitchAtMs = (
-  ms: number,
-  config: Pick<SynthesizerConfig, "bpm" | "scaleType">,
-  memo?: Map<OctavesScale, ScaleHalftone[]>
-): number => {
-  const { bpm, scaleType } = config;
-
-  const fullScale = generateScaleHalftones(scaleType, memo);
-
-  const scaleNoteIndex =
-    Math.floor(ms / bpmToMsPerBeat(bpm)) % fullScale.length;
-
-  return noteToFrequency(
-    fullScale[scaleNoteIndex] +
-      halftonesFromConcertA(scaleType.scale.tonic, scaleType.startOctave)
-  );
-};
 
 const SinewaveGenerator = (sampleRate: number) => {
   let x = 0;
@@ -55,8 +30,17 @@ const SinewaveGenerator = (sampleRate: number) => {
   };
 };
 
+export interface PieceSynthesizer {
+  /**
+   * Stop whatever we're currently playing and start producing ntoes for the given piece.
+   *
+   * @param piece A description of the piece to switch to.
+   */
+  switchTo(config: PitchProducerConfig): void;
+}
+
 export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
-  implements Suspendable {
+  implements PieceSynthesizer {
   private memo = new Map();
 
   static SAMPLE_RATE = 48000;
@@ -72,7 +56,8 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
   private constructor(
     private readonly config: SynthesizerConfig,
     private readonly wasmSamplesProcessor: AudioSamplesProcessor,
-    private readonly pitchDetector: PitchDetector
+    private readonly pitchDetector: PitchDetector,
+    private readonly pitchProducer = makePitchProducerService()
   ) {
     super();
   }
@@ -96,15 +81,6 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
   }
 
   private sendSamplesToWasm(frame: { t: number; noteFreq: number }) {
-    // console.log(
-    //   "sending samples to WASM",
-    //   "this.prevNoteT",
-    //   this.prevNoteT,
-    //   "frame.t",
-    //   frame.t,
-    //   "frame.noteFreq",
-    //   frame.noteFreq
-    // );
     const msElapsed = frame.t - this.prevNoteT;
     const chunks = Math.floor(
       (AudioSynthesizer.UPDATES_PER_SECOND * msElapsed) / 1000
@@ -117,8 +93,33 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
     this.prevNoteT = frame.t;
   }
 
+  switchTo(
+    config: Pick<PitchProducerConfig, "piece" | "startNote" | "bpm">
+  ): void {
+    this.pitchProducer.send({
+      type: "START_PIECE",
+      config: {
+        ...config,
+        startTime: nonNegInteger(this.prevNoteT),
+      },
+    });
+  }
+
   produceFrame(t: number) {
-    return { t, noteFreq: pitchAtMs(t, this.config, this.memo) };
+    const { producer } = this.pitchProducer.state.context;
+    if (!producer) {
+      throw Error(
+        "Retrieving values from the audio synthesizer without first having started a piece."
+      );
+      // return { t, noteFreq: 0 };
+    }
+
+    return {
+      t,
+      noteFreq: producer(
+        nonNegInteger(t)
+      ) /*pitchAtMs(t, this.config, this.memo)*/,
+    };
   }
 
   tick(frame: { t: number; noteFreq: number }) {
@@ -186,7 +187,15 @@ export class AudioSynthesizer extends Subject<AudioRecorderEventTypes>
         throw Error("Wasm pitch detector could not be created");
       }
 
-      return new AudioSynthesizer(config, wasmSamplesProcessor, pitchDetector);
+      const result = new AudioSynthesizer(
+        config,
+        wasmSamplesProcessor,
+        pitchDetector
+      );
+
+      result.switchTo(config);
+
+      return result;
     } catch (e) {
       console.warn(e);
       throw new Error(

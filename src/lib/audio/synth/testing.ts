@@ -1,19 +1,20 @@
 import { AudioSynthesizer } from "../recorder/synthaudio/AudioSynthesizer";
-import { bpm, posInteger, nonNegInteger } from "@/lib/scales";
+import { bpm, nonNegInteger } from "@/lib/scales";
+import { lookupPiece, BuiltinPieces } from "@/lib/music-recognition";
 
 export async function majorScaleSynth(BPM = 60, windowSamples = 2048) {
-  return await AudioSynthesizer.create(
+  const synth = await AudioSynthesizer.create(
     {
-      bpm: bpm(BPM),
       instrument: "bell",
-      scaleType: {
-        scale: { tonic: "C", mode: "major" },
-        octaves: posInteger(1),
-        startOctave: nonNegInteger(5),
-      },
+      piece: lookupPiece(BuiltinPieces.MajorScale),
+      startTime: nonNegInteger(0),
+      startNote: "C",
+      bpm: bpm(BPM),
     },
     windowSamples,
     0.7,
     0.75
   );
+
+  return synth;
 }

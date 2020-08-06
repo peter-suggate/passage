@@ -1,5 +1,5 @@
 import { NoteDelta } from "./noteDeltas";
-import { Note, integer, NOTES, posInteger } from "@/lib/scales";
+import { posInteger } from "@/lib/scales";
 import { PhraseBuilder } from "./PhraseBuilder";
 
 export type Piece = { name: string; notes: NoteDelta[] };
@@ -54,6 +54,12 @@ export const piece = (name: string, builder = TWINKLE): Piece => ({
   name,
   notes: builder.noteDeltas,
 });
+
+export enum BuiltinPieces {
+  Twinkle = "Twinkle",
+  FrenchFolkSong = "French Folk Song",
+  MajorScale = "Major Scale",
+}
 
 export const musicBank = (): MusicBank =>
   [

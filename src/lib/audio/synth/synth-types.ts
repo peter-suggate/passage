@@ -1,18 +1,12 @@
-import {
-  Bpm,
-  bpm,
-  posInteger,
-  OctavesScale,
-  nonNegInteger,
-} from "@/lib/scales";
+import { PitchProducerConfig } from "../recorder/synthaudio/pitchProducer";
+import { musicBank } from "@/lib/music-recognition";
+import { nonNegInteger } from "@/lib/scales";
 
 export type Instrument = "bell" | "violin";
 
 export type SynthesizerConfig = {
   instrument: Instrument;
-  scaleType: OctavesScale;
-  bpm: Bpm;
-};
+} & PitchProducerConfig;
 
 export const instruments: Instrument[] = ["bell", "violin"];
 
@@ -27,10 +21,9 @@ export const instrumentName = (instrument: Instrument): string => {
 
 export const defaultSynthConfig = (): SynthesizerConfig => ({
   instrument: "bell",
-  scaleType: {
-    scale: { tonic: "A", mode: "major" },
-    startOctave: nonNegInteger(3),
-    octaves: posInteger(1),
-  },
-  bpm: bpm(60),
+  piece: musicBank()[0],
+  startTime: nonNegInteger(0),
+  startNote: "A",
+  // bpm: bpm;
+  // startOctave?: NonNegInteger;
 });

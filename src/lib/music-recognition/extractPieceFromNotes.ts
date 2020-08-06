@@ -1,6 +1,5 @@
-// const { editDistanceForClosestMatch } = require("edit-distance-search");
 import { NoteDelta } from "./noteDeltas";
-import { MatchedPiece } from "./phraseMatch";
+import { MatchedPiece, phraseMatchWithAlignment } from "./phraseMatch";
 
 /**
  * Finds the start and end of a given sequence of notes that best matches the specified
@@ -15,11 +14,9 @@ export const extractPieceFromNotes = (
   notes: NoteDelta[],
   piece: MatchedPiece
 ) => {
-  // TODO perform a trace back.
-  // editDistanceForClosestMatch();
-
   return {
-    indexOfFirstNote: 0,
+    indexOfFirstNote: phraseMatchWithAlignment(notes, piece.piece.notes)
+      .startIndex,
     notes,
   };
 };
