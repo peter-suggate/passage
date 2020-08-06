@@ -18,6 +18,7 @@ module.exports = {
     "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
     "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",
     "no-empty-function": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
     // "comma-dangle": "off",
   },
   overrides: [
